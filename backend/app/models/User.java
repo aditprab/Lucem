@@ -58,7 +58,7 @@ public class User {
     boolean ret = true;
     MongoConnection mc = new MongoConnection("db.properties");
     MongoCollection<Document> collection = mc.getCollection();
-    if(collection.find(Filters.eq("email", Email)).first() == null) { 
+    if(collection.find(Filters.regex("email", Email, "i")).first() == null) { 
       ret = false;
     }
     mc.close();
@@ -70,7 +70,7 @@ public class User {
     boolean ret = true;
     MongoConnection mc = new MongoConnection("db.properties");
     MongoCollection<Document> collection = mc.getCollection();
-    Document d = collection.find(Filters.eq("email", Email)).first();
+    Document d = collection.find(Filters.regex("email", Email, "i")).first();
     if(d == null) {
       // user does not exist
       ret = false;
@@ -89,20 +89,4 @@ public class User {
     mc.close();
     return ret;
   }
-
- //  public static void main(String [] args)
- //  {
-
- //    User nathan = new User("nathan.tlam@gmail.com", "gobroncos");
- //  //  System.out.println(nathan.password());
- //    User other = new User("other@gmail.com", "gobroncos");
- // //   System.out.println(other.password());
- //  //  if(Arrays.equals(nathan.password().getBytes(), other.password().getBytes())) {
- //  //    System.out.println("passwords match");
- //   // } else {
- //   //   System.out.println("passwords do not match");
- //   // }
-
- //    System.out.println(User.authenticate("nathantlam@gmail.com", "gobroncos"));
- //  }
 }

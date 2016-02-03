@@ -6,7 +6,8 @@
 // requires access to a specific collection rather than multiple.
 //
 // The constructor receives the information necessary to establish
-// a connection through a properties file.
+// a connection through a properties file. The properties file should
+// be stored in the conf/ directory. 
 
 package models;
 
@@ -69,7 +70,8 @@ class MongoConnection
       p.load(is);
       is.close();
     } catch(java.io.IOException e) {
-      System.out.println("issue interfacing with the properties file");
+      // check that properties file is in conf/ directory.
+      System.out.println("issue interfacing with the properties file.");
       return null;
     }
 
