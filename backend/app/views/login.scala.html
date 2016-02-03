@@ -1,0 +1,25 @@
+@()
+@main("Log In") {
+	<script>
+		$(document).ready(function(){
+			$("#login").submit(function(e){
+				var url = "http://localhost:9000/login"
+				e.preventDefault();
+				// serialize function uses the name attribute associated with
+				// the input[type=text]
+				$.post(url, $(this).serialize())
+				 .done(function(data){
+					alert(data);
+				});
+			});
+		});
+	</script>
+	<form id="login">
+		Email:
+		<input id="email" name="email" type="text"></input>
+		Password:
+		<input id="password" name="password" type="password"></input>
+		<input type="submit" value="Login"></input>
+	</form>
+}
+

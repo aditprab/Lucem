@@ -6,6 +6,8 @@ import play.mvc.*;
 import views.html.*;
 import models.*;
 
+import java.util.Map;
+
 public class Application extends Controller {
 
     public static Result index() {
@@ -17,12 +19,53 @@ public class Application extends Controller {
     }
 
     public static Result login() {
-	    String s = "WORK IN PROGRESS";
-        return ok(s);
+        return ok(login.render());
     }
 
-    public static Result signup(String email, String password) {
-        User u = new User(email, password);
-        return ok("WORK IN PROGRESS");
+    public static Result authenticate() {
+        Map<String, String[]> form = request().body().asFormUrlEncoded();
+        final String [] expect = {"email", "password"};
+        if(isValidRequest(form, expect) == false) {
+            return badRequest("bad"); 
+        }
+        boolean authenticated = User.authenticate(form.get("email")[0],
+                                            form.get("password")[0]);
+        if(authenticated == false) {
+            return ok("incorrect login");
+        }
+
+        return ok("logged in");
     }
+    public static Result signup() {
+        return ok(signup.render());
+    }
+
+    public static Result addUser() {
+        Map<String, String[]> form = request().body().asFormUrlEncoded();
+        final String [] expect = {"email", "password"};
+        String email;
+        if(isValidRequest(form, expect) == false) {
+            return badRequest("bad"); 
+        }
+        email = form.get("email")[0];
+        if(User.exists(email)) {
+            return ok("user already exists");
+        }
+        User user = new User(email, form.get("password")[0]);
+        return ok("created");
+    }
+
+    private static boolean isValidRequest(Map<String, String[]> request,
+                                          String [] keys) {
+        if(request == null) {
+            return false;
+        }
+        for(int i = 0; i < keys.length; ++i) {
+            if(request.containsKey(keys[i]) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

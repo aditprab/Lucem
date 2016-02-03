@@ -9,4 +9,6 @@ GET	    /Lucem	   		            controllers.Application.test()
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 GET     /login						controllers.Application.login()
-POST    /signup						controllers.Application.signup(email, password)
+POST    /login						controllers.Application.authenticate()
+GET     /signup                     controllers.Application.signup()
+POST    /signup						controllers.Application.addUser()
