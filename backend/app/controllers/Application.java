@@ -21,6 +21,10 @@ public class Application extends Controller {
     public static Result login() {
         return ok(login.render());
     }
+    
+    public static Result results() {
+    	return ok(results.render());
+    }
 
     public static Result authenticate() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
