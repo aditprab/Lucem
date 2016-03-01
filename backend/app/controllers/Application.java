@@ -44,6 +44,15 @@ public class Application extends Controller {
         return ok(signup.render());
     }
 
+
+    public static Result query(){
+        Query query = new Query();
+        Map<String, String[]> form = request().body().asFormUrlEncoded();
+
+        return ok("hey");
+    }
+
+
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
         final String [] expect = {"email", "password"};

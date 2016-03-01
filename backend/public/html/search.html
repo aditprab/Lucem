@@ -1,0 +1,111 @@
+<html lang="en">
+<head>
+  <title>Search - Lucem</title>
+  <link href='https://fonts.googleapis.com/css?family=Raleway:500,700' rel='stylesheet' type='text/css'>
+  <style>
+   html, body, input[type="text"], button[type=submit] {
+     font-family: 'Raleway', sans-serif;
+   }
+   body {
+     margin:0;
+     padding:0;
+   }
+   #global-container {
+   }
+   #img-container {
+     height:50%;
+     background-image:url("http://i.imgur.com/m43WQk0.jpg");
+     background-size:100% auto;
+     background-repeat:no-repeat;
+   }
+   #logo-container {
+     margin:0 auto;
+     width:375px;
+     border: 0.65em solid white;
+     text-align:center;
+     /* center div vertically */
+     position:relative;
+     top:50%;
+     transform:translateY(-50%);
+     text-align: center;
+   }
+   #logo-container h1 {
+     font-size:3.5em;
+     letter-spacing:0.25em;
+     /* offsets the letter spacing on the final letter*/
+     padding-left:0.25em;
+     color:white;
+   }
+   #form-container {
+     width:600px;
+     margin:2.5% auto;
+     text-align:center;
+   }
+   #search input[type=text] {
+     font-size:1.25em;
+     padding:5px 7px;
+     width:65%;
+   }
+   #search button[type=submit] {
+     vertical-align:top;
+     margin:1px 0 0 3px;
+     height:3em;
+     background-color:lightgrey;
+     border:none;
+     color:white;
+     cursor:initial;
+     font-size:.75em;
+     font-weight:700;
+     letter-spacing:0.5px;
+     padding:0 12px;
+   }
+   #search button[type=submit]:hover {
+     cursor:pointer;
+     background-color:grey;
+   }
+   #nav-container {
+     position:absolute;
+     top:0;
+     left:0;
+     width:100%;
+     padding:.75em 0;
+     text-align:right;
+     background-color: rgba(0,0,0,0.6);
+   }
+   #nav-container a {
+     margin:0 .5em 0 0 ;
+     font-weight:700;
+     color:white;
+     text-decoration:none;
+   }
+   .uppercase {
+     text-transform:uppercase;
+   }
+   #nav-container a {
+    font-size:0.9em;
+   }
+  </style>
+</head>
+<body>
+  <div id="global-container">
+    <div id="nav-container">
+      <a class="uppercase" href="">Home</a>
+      <a class="uppercase" href="">Logout</a>
+    </div>
+    <div id="img-container">
+      <div id="logo-container">
+        <h1 class="uppercase">Lucem</h1>
+      </div>
+    </div>
+  </div>
+  <div id="form-container">
+    <form id="search">
+     <input type="text">
+     </input>
+     <button class="uppercase" type="submit" value="SEARCH">
+       Search
+     </button>
+    </form>
+  </div>
+</body>
+</html>
