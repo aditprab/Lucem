@@ -84,7 +84,58 @@
    #nav-container a {
     font-size:0.9em;
    }
+   #modal-background {
+        position:fixed;
+        top:0;
+        left:0;
+        background-color:rgba(0, 0, 0, 0.6);
+        width:100%;
+        height:100vh;
+        z-index:1;
+      }
+      #modal-container {
+        background-color:white;
+        width:90%;
+        margin:0 auto;
+        height:90vh;
+        overflow:auto;
+        position:relative;
+        top:50%;
+        transform:translateY(-50%);
+        z-index:2;
+      }
+
   </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script>
+  	$(document).ready(function(){
+                        $("#search").submit(function(e){
+                                var url = "http://52.36.127.109:9000/search"
+                                e.preventDefault();
+                                // serialize function uses the name attribute associated with
+                                // the input[type=text]
+                                $.post(url, $(this).serialize())
+                                 .done(function(data){
+  var json = JSON.parse(data);
+  if(json.documents == null) {
+    console.log("error");
+    return;
+  }
+  var modalBackground = "<div id=\"modal-background\"></div>";
+          var containerHTML = "<div id=\"modal-container\"></div>";
+          $("body").prepend(modalBackground);
+          $("#modal-background").append(containerHTML);
+          $("#modal-background").click(function() {
+            if($(event.target).is("#modal-background")) {
+              $("#modal-background").remove();
+            }
+          });
+          $("#modal-container").html(json.documents[0].html);
+                                });
+                        });
+                });
+        </script>
+  </script>
 </head>
 <body>
   <div id="global-container">
@@ -100,9 +151,9 @@
   </div>
   <div id="form-container">
     <form id="search">
-     <input type="text">
+     <input type="text" id="query" name="query">
      </input>
-     <button class="uppercase" type="submit" value="SEARCH">
+     <button class="uppercase" type="submit" value="Search">
        Search
      </button>
     </form>

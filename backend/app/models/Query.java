@@ -3,17 +3,14 @@ package models;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.*;
 import org.json.*;
 
 
-class Query{
-
-	public static void main(String[] args) throws Exception{
-		List<Integer> queryResults = querySolr("death");
-	}
-
+public class Query{
+	
 	public static List<Integer> querySolr(String query) throws Exception{
 		//Queries solr with the given string.
 		//Returns an ArrayList of document ids, highest score in array[0], second in array[1], etc.
@@ -27,12 +24,14 @@ class Query{
 		connection.setRequestProperty("Accept", "application/json");
 		BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
 		StringBuilder sb = new StringBuilder();
+		
 		String line;
-	    while ((line = br.readLine()) != null) {
-	        sb.append(line);
-	    }
+		while ((line = br.readLine()) != null) {
+	        	sb.append(line);
+	    	}
 
-	    //Convert the string  to JSON. 
+	    	
+		//Convert the string  to JSON. 
 		JSONObject outerJSON = new JSONObject(sb.toString());
 		JSONObject responseJSON = outerJSON.getJSONObject("response");
 		JSONArray jsonArray = responseJSON.getJSONArray("docs");
@@ -52,6 +51,32 @@ class Query{
 		return ranked;
 	}	
 
+	
+	public static String queryCourtListener(List<Integer> ids) throws Exception{
+	
+		StringBuilder sb = new StringBuilder();
+		sb.append("{\"documents\":[");
+		for(int i=0; i < ids.size(); i++){	
+ 			String path = "/data/solr-5.4.1/scotus/";
+			String id = Integer.toString(ids.get(i));
+			path = path + id + ".json";
+		
+		        BufferedReader br = new BufferedReader(new FileReader(path));
+			String line;
+			while((line = br.readLine()) != null){
+				sb.append(line);
+			}
+			if(i < ids.size() - 1) {
+			  sb.append(",");
+                        }
+		}
+		sb.append("]}");
+		return sb.toString();
+	}
+
+
+
+
 	private static void placeInList(List<Integer> list, int id){
 		for(int i=0; i < list.size(); i++){
 			if(list.get(i) == id){
@@ -59,7 +84,7 @@ class Query{
 				return;
 			}
 		}
-
+	
 		//Else place.
 		list.add(id);
 	}

@@ -1,7 +1,7 @@
 //Utility class for Query. Handles calculations assosciated with ranking query results.
 
 package models;
-
+/*
 
 class QueryUtility{
 
@@ -32,3 +32,4 @@ class QueryUtility{
 
 
 }
+*/
