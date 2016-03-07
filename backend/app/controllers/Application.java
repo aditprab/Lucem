@@ -6,7 +6,7 @@ import play.mvc.*;
 import views.html.*;
 import models.*;
 
-import java.util.Map;
+import java.util.*;
 
 public class Application extends Controller {
 
@@ -47,6 +47,16 @@ public class Application extends Controller {
     public static Result signup() {
         return ok(signup.render());
     }
+
+
+    public static Result query() throws Exception{
+        Query query = new Query();        
+	Map<String, String[]> form = request().body().asFormUrlEncoded();
+	List<Integer> list = query.querySolr(form.get("query")[0]);
+	String result = query.queryCourtListener(list);
+	return ok(result);
+    }
+
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
