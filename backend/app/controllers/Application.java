@@ -25,6 +25,10 @@ public class Application extends Controller {
     public static Result results() {
     	return ok(results.render());
     }
+    
+    public static Result graph() {
+        return ok(graph.render());
+    }
 
     public static Result authenticate() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
