@@ -47,13 +47,15 @@ public class Query{
 		     
 		}
 
+		//Need to change this to return the score as well, for calculations. Or pass the score when calculated to the algorithm (w/pagerank).
 		System.out.println(ranked);
 		return ranked;
 	}	
 
 	
 	public static String queryCourtListener(List<Integer> ids) throws Exception{
-	
+		//Ideally change this to something that makes a REST call to court listener  instead of looking locally?
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\"documents\":[");
 		for(int i=0; i < ids.size(); i++){	

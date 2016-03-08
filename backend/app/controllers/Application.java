@@ -40,13 +40,14 @@ public class Application extends Controller {
 
         return ok("logged in");
     }
+
     public static Result signup() {
         return ok(signup.render());
     }
 
 
     public static Result query() throws Exception{
-        Query query = new Query();        
+	Query query = new Query();        
 	Map<String, String[]> form = request().body().asFormUrlEncoded();
 	List<Integer> list = query.querySolr(form.get("query")[0]);
 	String result = query.queryCourtListener(list);
@@ -66,7 +67,7 @@ public class Application extends Controller {
             return ok("user already exists");
         }
         User user = new User(email, form.get("password")[0]);
-        return ok("created");
+       return ok("created");
     }
 
     private static boolean isValidRequest(Map<String, String[]> request,
