@@ -18,3 +18,4 @@ GET     /signup                     controllers.Application.signup()
 POST    /signup						controllers.Application.addUser()
 
 GET     /results                    controllers.Application.results()
+POST	/findCitations		    controllers.Application.findCitations()

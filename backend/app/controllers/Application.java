@@ -53,7 +53,11 @@ public class Application extends Controller {
 	String result = query.queryCourtListener(list);
 	return ok(result);
     }
-
+    public static Result findCitations() {
+        Query query = new Query();
+        String result = query.findCitations(1724);
+    	return ok(result);
+    }
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();

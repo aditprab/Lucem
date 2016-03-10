@@ -76,7 +76,37 @@ public class Query{
 		return sb.toString();
 	}
 
-
+	public static String findCitations(int id) {
+       	    StringBuilder sb = new StringBuilder();
+            BufferedReader br;
+            String path = "/data/solr-5.4.1/scotus/";
+            String fileId = Integer.toString(id);
+            path = path + fileId + ".json";
+            try {
+                br = new BufferedReader(new FileReader(path));
+                String line;
+                while((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+                JSONObject outer = new JSONObject(sb.toString());
+                JSONArray citations = outer.getJSONArray("opinions_cited");
+                sb = new StringBuilder();
+                sb.append("{\"citations\" : [");
+                for(int i = 0; i < citations.length(); i++) {
+                    String citedUrl = citations.getString(i);
+                    String temp[] = citedUrl.split("/");
+                    String citedId = temp[temp.length - 1];
+                    sb.append(citedId);
+                    if(i < citations.length() - 1)
+                        sb.append(",");
+                }
+		sb.append("]}");
+                return sb.toString();
+            } catch(Exception e) {
+                e.printStackTrace();
+                return "error";
+            }
+        }
 
 
 	private static void placeInList(List<Integer> list, int id){
