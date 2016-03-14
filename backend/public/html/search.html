@@ -107,6 +107,9 @@
 
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
   <script>
   	$(document).ready(function(){
                         $("#search").submit(function(e){
@@ -136,9 +139,46 @@
           });
           $("#modal-container").html(json.documents[0].html);
                                 });
+                                .done(function(data){
+  		
+					var json = JSON.parse(data);
+  					
+					if(json.documents == null) {
+ 			   			console.log("error");
+ 			   			return;
+		  			}	
+ 	
+					var modalBackground = "<div id=\"modal-background\"></div>";
+          				var containerHTML = "<div id=\"modal-container\"></div>";
+         				$("body").prepend(modalBackground);
+          				$("#modal-background").append(containerHTML);
+          				$("#modal-background").click(function() {
+            					if($(event.target).is("#modal-background")) {
+             						 $("#modal-background").remove();
+            					}
+        	 			 });
+         					
+					var i =0;
+					while(i < json.documents.length){
+                                                $("#modal-container").append("<br>");
+											
+						$("#modal-container").append("<div id=" + divId + " class='collapse'> </div>");
+                                                $("#"+divId).append(json.documents[i].html);
+						
+						var caseTitle = $("#"+divId).find(".parties").text();
+						caseTitle.replace(/<(?:.|\n)*?>/gm, ' ');
+						var actualResultNumber = i + 1;
+						var divId = "result" + i;
+		var buttonHTML =  "<button type='button' class='btn btn-info' data-toggle='collapse'"+ "data-target='#"+divId+"'>"+ caseTitle + " </button>"; 	
+						
+						$("#modal-container").append(buttonHTML);
+
+						i++;
+					}
+					
+				});
                         });
-                });
-        </script>
+         });
   </script>
 </head>
 <body>

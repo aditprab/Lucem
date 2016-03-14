@@ -2,7 +2,6 @@
 
 package models;
 /*
-
 class QueryUtility{
 
 
@@ -33,3 +32,4 @@ class QueryUtility{
 
 }
 */
+
