@@ -14,8 +14,8 @@ var guideRadius = [];
 var MAX_Y = HEIGHT/RADIUS;
 var MAX_X = WIDTH/RADIUS;
 
-var citedColor = "#FDB927";
-var precColor = "#006BB6"
+var citedColor = "#b3b3b3";
+var precColor = "#f2f2f2";
 
 // rectangle function
 function nodeOriginX(similarity) {

@@ -50,13 +50,18 @@ public class Application extends Controller {
 
 
     public static Result query() throws Exception{
-        Query query = new Query();        
-	Map<String, String[]> form = request().body().asFormUrlEncoded();
-	List<Integer> list = query.querySolr(form.get("query")[0]);
-	String result = query.queryCourtListener(list);
-	return ok(result);
+        Query query = new Query();
+        Map<String, String[]> form = request().body().asFormUrlEncoded();
+        List<Integer> list = query.querySolr(form.get("query")[0]);
+        String result = query.queryCourtListener(list);
+        return ok(result);
     }
 
+    public static Result findCitations() {
+        Query query = new Query();
+        String result = query.findCitations(1724);
+        return ok(result);
+    }
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();

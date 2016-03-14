@@ -111,12 +111,16 @@
   	$(document).ready(function(){
                         $("#search").submit(function(e){
                                 var url = "http://52.36.127.109:9000/search"
+                                //var url = "/search";
                                 e.preventDefault();
                                 // serialize function uses the name attribute associated with
                                 // the input[type=text]
+                                console.log($(this).attr("query"));
+                                console.log($(this).serialize());
                                 $.post(url, $(this).serialize())
                                  .done(function(data){
   var json = JSON.parse(data);
+  console.log(json);
   if(json.documents == null) {
     console.log("error");
     return;

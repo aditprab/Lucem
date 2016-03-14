@@ -5,6 +5,7 @@
     margin: 0 auto;
 }*/
 
-.node {
-    fill: #000;
+svg {
+    display: block;
+    margin: 0 auto;
 }
