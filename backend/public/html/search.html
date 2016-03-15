@@ -128,25 +128,6 @@
     console.log("error");
     return;
   }
-  var modalBackground = "<div id=\"modal-background\"></div>";
-          var containerHTML = "<div id=\"modal-container\"></div>";
-          $("body").prepend(modalBackground);
-          $("#modal-background").append(containerHTML);
-          $("#modal-background").click(function() {
-            if($(event.target).is("#modal-background")) {
-              $("#modal-background").remove();
-            }
-          });
-          $("#modal-container").html(json.documents[0].html);
-                                });
-                                .done(function(data){
-  		
-					var json = JSON.parse(data);
-  					
-					if(json.documents == null) {
- 			   			console.log("error");
- 			   			return;
-		  			}	
  	
 					var modalBackground = "<div id=\"modal-background\"></div>";
           				var containerHTML = "<div id=\"modal-container\"></div>";
