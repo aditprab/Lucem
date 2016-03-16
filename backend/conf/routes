@@ -22,3 +22,5 @@ GET     /graph                      controllers.Application.graph()
 POST    /findCitations              controllers.Application.findCitations()
 
 POST    /getDocuments               controllers.Application.getDocuments()
+
+GET     /graph-js                     controllers.Assets.at(path="/public", file="javascripts/graph.js")

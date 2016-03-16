@@ -229,84 +229,113 @@ var links = [
     }
 ]
 
-var container = d3.select("#d3-graph").append("svg")
-    .attr({
-        width: width,
-        height: height
-    });
-    
-var force  = d3.layout.force()
-    .size([width, height])
-    .linkDistance(100)
-    .nodes(data)
-    .links(links)
-    .charge(function(d, i) {
-        if(d.radius == 5)
-            return 500;
-        return (i == 0) ? -1000 : d.radius * -20;
-    })
-    .start();
 
-var links = container.selectAll(".link")
-    .data(links).enter().append("line")
-    .style("stroke-width", "1px")
-    .style("stroke", "grey");
-
-var nodeGroup = container.selectAll("g")
-    .data(data).enter().append("g");
-
-var node = nodeGroup.append("circle")
-    .attr({
-        r: function(d) {
-            console.log(d);
-            return d.radius;
-        },
-        fill: function(d) {
-            if(d.group != null) {
-                if(d.group == 0)
-                    return "#cca300";
-                if(d.group == 1)
-                    return "#3366ff";
-            }
-            return "black";
+function buildGraph(nodes) {
+    var data = [
+        {
+            fixed: false,
+            radius: 20,
+            x: width/2,
+            y: 20,
+            group: 0,
+            color: "#cca300"     
         }
-    });
-    // .call(force.drag);
+    ];
+    var links = [];
+    console.log(nodes.length);
+    for(var i = 0; i < nodes.length; i++) {
+        var node = {
+            radius: 10
+        };
+        var link = {
+            source: 0,
+            target: i+1
+        };
+        data.push(node);
+        links.push(link);
+        //console.log(node);
+        //console.log(link);
+    }
+    
+    var container = d3.select("#d3-graph").append("svg")
+        .attr({
+            width: width,
+            height: height
+        });
+        
+    var force  = d3.layout.force()
+        .size([width, height])
+        .linkDistance(100)
+        .nodes(data)
+        .links(links)
+        .charge(function(d, i) {
+            if(d.radius == 5)
+                return 500;
+            return (i == 0) ? -1000 : d.radius * -20;
+        })
+        .start();
 
-var label = nodeGroup.append("text")
-    .text("Sample title")
-    .attr("transform", function(d) {
-        return "translate(0," + -d.radius + ")"
-    });
+    var links = container.selectAll(".link")
+        .data(links).enter().append("line")
+        .style("stroke-width", "1px")
+        .style("stroke", "grey");
 
-force.on("tick", function() {
-   nodeGroup.attr({
-       /*cx: function(d) {
-           return d.x;
-       },
-       cy: function(d) {
-           return d.y;
-       }*/
-       transform: function(d) {
-           return "translate(" + [d.x, d.y] + ")";
-       }
-   });
-   
-   links.attr({
-      x1: function(d) {
-          return d.source.x;
-      },
-      y1: function(d) {
-          return d.source.y;
-      },
-      x2: function(d) {
-          return d.target.x;
-      },
-      y2: function(d) {
-          return d.target.y;
-      }
-   }); 
-});
+    var nodeGroup = container.selectAll("g")
+        .data(data).enter().append("g");
+
+    var node = nodeGroup.append("circle")
+        .attr({
+            r: function(d) {
+                //console.log(d);
+                return d.radius;
+            },
+            fill: function(d) {
+                if(d.group != null) {
+                    if(d.group == 0)
+                        return "#cca300";
+                    if(d.group == 1)
+                        return "#3366ff";
+                }
+                return "black";
+            }
+        });
+        // .call(force.drag);
+
+    var label = nodeGroup.append("text")
+        .text("Sample title")
+        .attr("transform", function(d) {
+            return "translate(0," + -d.radius + ")"
+        });
+
+    force.on("tick", function() {
+        nodeGroup.attr({
+            /*cx: function(d) {
+                return d.x;
+            },
+            cy: function(d) {
+                return d.y;
+            }*/
+            transform: function(d) {
+                return "translate(" + [d.x, d.y] + ")";
+            }
+        });
+    
+        links.attr({
+            x1: function(d) {
+                return d.source.x;
+            },
+            y1: function(d) {
+                return d.source.y;
+            },
+            x2: function(d) {
+                return d.target.x;
+            },
+            y2: function(d) {
+                return d.target.y;
+            }
+        }); 
+    });
+}
 
     
 
