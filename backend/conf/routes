@@ -20,3 +20,5 @@ GET     /results                    controllers.Application.results()
 
 GET     /graph                      controllers.Application.graph()
 POST    /findCitations              controllers.Application.findCitations()
+
+POST    /getDocuments               controllers.Application.getDocuments()

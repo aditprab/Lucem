@@ -111,55 +111,89 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
   <script>
+      
+     function cleanCitations(citations) {
+        var ids = [];
+        for(var i = 0; i < citations.length; i++) {
+            var entries = citations[i].split("/");
+            ids.push(entries[entries.length-2]);
+        }
+        return ids;
+    }
+    
+    
   	$(document).ready(function(){
-                        $("#search").submit(function(e){
-                                var url = "http://52.36.127.109:9000/search"
-                                //var url = "/search";
-                                e.preventDefault();
-                                // serialize function uses the name attribute associated with
-                                // the input[type=text]
-                                console.log($(this).attr("query"));
-                                console.log($(this).serialize());
-                                $.post(url, $(this).serialize())
-                                 .done(function(data){
-  var json = JSON.parse(data);
-  console.log(json);
-  if(json.documents == null) {
-    console.log("error");
-    return;
-  }
- 	
-					var modalBackground = "<div id=\"modal-background\"></div>";
-          				var containerHTML = "<div id=\"modal-container\"></div>";
-         				$("body").prepend(modalBackground);
-          				$("#modal-background").append(containerHTML);
-          				$("#modal-background").click(function() {
-            					if($(event.target).is("#modal-background")) {
-             						 $("#modal-background").remove();
-            					}
-        	 			 });
+        
+        $("#search").submit(function(e){
+            var url = "http://52.36.127.109:9000/search"
+            //var url = "/search";
+            e.preventDefault();
+            // serialize function uses the name attribute associated with
+            // the input[type=text]
+            $.post(url, $(this).serialize())
+                .done(function(data){
+                    var json = JSON.parse(data);
+                    //console.log(json.documents[0].opinions_cited);
+                    if(json.documents == null) {
+                        console.log("error");
+                        return;
+                    }
+                    var modalBackground = "<div id=\"modal-background\"></div>";
+                        var containerHTML = "<div id=\"modal-container\"></div>";
+                        $("body").prepend(modalBackground);
+                        $("#modal-background").append(containerHTML);
+                        $("#modal-background").click(function() {
+                            if($(event.target).is("#modal-background")) {
+                                    $("#modal-background").remove();
+                            }
+                        });
          					
 					var i =0;
+                    var citations = [];
 					while(i < json.documents.length){
-                                                $("#modal-container").append("<br>");
+                        citations[i] = cleanCitations(json.documents[i].opinions_cited);
+                        console.log(citations);
+                        $("#modal-container").append("<br>");
 											
 						$("#modal-container").append("<div id=" + divId + " class='collapse'> </div>");
-                                                $("#"+divId).append(json.documents[i].html);
+                        $("#"+divId).append(json.documents[i].html);
 						
 						var caseTitle = $("#"+divId).find(".parties").text();
 						caseTitle.replace(/<(?:.|\n)*?>/gm, ' ');
 						var actualResultNumber = i + 1;
 						var divId = "result" + i;
-		var buttonHTML =  "<button type='button' class='btn btn-info' data-toggle='collapse'"+ "data-target='#"+divId+"'>"+ caseTitle + " </button>"; 	
-						
+		                var buttonHTML =  "<button type='button' class='btn btn-info' data-toggle='collapse'"+ "data-target='#"+divId+"'>"+ caseTitle + " </button>"; 	
+                        var citationLink = "<a class='citations' data-target='" + i + "'>Show citations</a>"
 						$("#modal-container").append(buttonHTML);
-
-						i++;
+                        $("#modal-container").append(citationLink);
+                        
+                        i++;
 					}
-					
-				});
+                    
+                    $(".citations").click(function() {
+                        var data = "";
+                        var container = citations[$(this).data("target")];
+                        for(var i = 0; i < container.length; i++) {
+                            data += container[i];
+                            if(i < container.length - 1)
+                                data += ",";
+                        }
+                        var url = "/getDocuments";
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            dataType: "text",
+                            data: data,
+                            contentType: "text/plain",
+                            success: function(data) {
+                                console.log(data);
+                            }
                         });
-         });
+                    });	
+				});
+        });
+        
+    });
   </script>
 </head>
 <body>

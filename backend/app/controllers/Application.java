@@ -61,8 +61,28 @@ public class Application extends Controller {
     public static Result findCitations() {
         Query query = new Query();
         String result = query.findCitations(1724);
-    	return ok(result);
+    	   return ok(result);
     }
+     public static Result getDocuments() {
+          String[] stringIds;
+          Vector<Integer> ids = new Vector<Integer>();
+          String result = "";
+          String request = request().body().asText();
+          if(request == null)
+               return badRequest("expected plain text");
+          stringIds = request.split(",");
+          for(int i = 0; i < stringIds.length; i++) 
+               ids.add(Integer.parseInt(stringIds[i]));
+          for(int id: ids)
+               System.out.println(id);
+          try {
+               result = Query.queryCourtListener(ids);
+          } catch(Exception e) {
+               e.printStackTrace();
+               return badRequest("Document lookup failed");
+          }
+          return ok(result);
+     }
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
