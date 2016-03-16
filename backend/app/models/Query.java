@@ -4,9 +4,11 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.*;
 import org.json.*;
+import play.Logger;
 
 
 
@@ -59,19 +61,22 @@ public class Query{
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\"documents\":[");
+		Logger.debug(Integer.toString(ids.size()));
 		for(int i=0; i < ids.size(); i++){	
  			String path = "/data/solr-5.4.1/scotus/";
 			String id = Integer.toString(ids.get(i));
 			path = path + id + ".json";
-		
-		        BufferedReader br = new BufferedReader(new FileReader(path));
-			String line;
-			while((line = br.readLine()) != null){
-				sb.append(line);
+			File file = new File(path);
+			if(file.exists()) {
+		        	BufferedReader br = new BufferedReader(new FileReader(path));
+				String line;
+				while((line = br.readLine()) != null){
+					sb.append(line);
+				}
+				if(i < ids.size() - 1) {
+			  		sb.append(",");
+                       	 	}
 			}
-			if(i < ids.size() - 1) {
-			  sb.append(",");
-                        }
 		}
 		sb.append("]}");
 		return sb.toString();
