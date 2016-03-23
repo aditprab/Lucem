@@ -6,8 +6,25 @@ function getCitations() {
         });
 }
 
+function testGraph() {
+    var url = "/testGraph";
+    $.post(url, "")
+        .done(function(data) {
+            var obj = JSON.parse(data);
+            console.log(obj);
+            buildGraph(obj.documents, obj.initial_count);
+        });
+}
+
+function getTitle(url) {
+    var buff = url.split("/");
+    var title = buff[buff.length -2];
+    return title.replace(/-/g, " ");
+}
+
 $(document).ready(function() {
-       getCitations();
+    //testGraph();
+    //buildGraph();
 });
 
 var width = 1000;
@@ -229,34 +246,72 @@ var links = [
     }
 ]
 
-
-function buildGraph(nodes) {
+function buildGraph(nodes, count) {
+    // selected case
+    console.log(nodes.length);
     var data = [
         {
-            fixed: false,
+            fixed: true,
             radius: 20,
             x: width/2,
-            y: 20,
+            y: height/2,
             group: 0,
-            color: "#cca300"     
+            color: "#cca300"
         }
     ];
     var links = [];
-    console.log(nodes.length);
-    for(var i = 0; i < nodes.length; i++) {
-        var node = {
-            radius: 10
-        };
+    // add inital links to selected case
+    for(var i = 0; i < count; i++) {
         var link = {
             source: 0,
-            target: i+1
+            target: i + 1
         };
-        data.push(node);
+        console.log(link);
         links.push(link);
-        //console.log(node);
-        //console.log(link);
     }
-    
+    // add nodes to data, add remaining links
+    var pad = 0;
+    for(var i = 0; i < nodes.length; i++) {
+        var node = {
+            radius: 10,
+            title: getTitle(nodes[i].absolute_url)
+        };
+        /*if(nodes[i].opinions_cited.length == 0) {
+            console.log("no citations");
+            continue;
+        }*/
+        var casesSeen = 0;
+        var maxNodes = 2;
+        var loopCondition;
+        if(maxNodes < nodes[i].opinions_cited.length)
+            loopCondition = maxNodes;
+        else
+            loopCondition = nodes[i].opinions_cited.length;
+        for(var j = 0, k = 0; j < loopCondition; j++) {
+            if(pad + count + k < nodes.length) {
+                //console.log(nodes[i].opinions_cited[j]);
+                if(nodes[i].opinions_cited[j] == nodes[pad + count + k].resource_uri) {
+                    var link = {
+                        source: i+1,
+                        target: pad + count + k + 1
+                    };
+                    console.log(link);
+                    links.push(link);
+                    casesSeen++;
+                    k++;
+                }
+                else {
+                    console.log("not found");
+                }
+            }
+        }
+        data.push(node);
+        pad += casesSeen;
+        //console.log(pad + count);
+        //console.log(node);
+    }
+    console.log(data);
+    console.log(links);
     var container = d3.select("#d3-graph").append("svg")
         .attr({
             width: width,
@@ -265,13 +320,11 @@ function buildGraph(nodes) {
         
     var force  = d3.layout.force()
         .size([width, height])
-        .linkDistance(100)
+        .linkDistance(20)
         .nodes(data)
         .links(links)
         .charge(function(d, i) {
-            if(d.radius == 5)
-                return 500;
-            return (i == 0) ? -1000 : d.radius * -20;
+            return -1000;
         })
         .start();
 
@@ -302,7 +355,9 @@ function buildGraph(nodes) {
         // .call(force.drag);
 
     var label = nodeGroup.append("text")
-        .text("Sample title")
+        .text(function(d, i) {
+            return d.title + " " + i;
+        })
         .attr("transform", function(d) {
             return "translate(0," + -d.radius + ")"
         });

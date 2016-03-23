@@ -117,6 +117,8 @@
       
      function cleanCitations(citations) {
         var ids = [];
+        if(citations == null)
+            return null;
         for(var i = 0; i < citations.length; i++) {
             var entries = citations[i].split("/");
             ids.push(entries[entries.length-2]);
@@ -172,56 +174,69 @@
                         
                         i++;
 					}
-                    
-                   
-                    
+                      
                     $(".citations").click(function() {
                         var data = "";
                         var container = citations[$(this).data("target")];
-                        var counter = 0;
                         var nodeMap = [];
                         for(var i = 0; i < container.length; i++) {
                             data += container[i];
                             if(i < container.length - 1)
                                 data += ",";
                         }
+                        if(container.length == 0) {
+                            console.log("empty");
+                            return;
+                        }
+                        console.log(data);
                         //var url = "/getDocuments";
-                        var url = "http://52.36.127.109:9000/getDocuments"
+                        var url = "http://52.36.127.109:9000/getDocuments";
                         $.ajax({
                             url: url,
                             type: "POST",
                             dataType: "text",
                             data: data,
                             contentType: "text/plain",
-                            success: function(data) {
-                                var obj = JSON.parse(data);
+                            success: function(response) {
+                                var obj = JSON.parse(response);
+                                nodeMap = nodeMap.concat(obj.documents);
+                                var data = "";
 				                console.log(obj.documents);
                                 for(var i = 0; i < obj.documents.length; i++) {
                                     var citations = cleanCitations(obj.documents[i].opinions_cited);
-                                    var data = "";
-                                    for(var j = 0; j < citations.length; j++) {
-                                        data += citations[i];
-                                        if(j < citations.length - 1) 
+                                    var maxNodes = 2;
+                                    //var maxNodes = citations.length;
+                                    var loopCondition;
+                                    if(maxNodes < citations.length)
+                                        loopCondition = maxNodes;
+                                    else
+                                        loopCondition = citations.length;
+                                    for(var j = 0; j < loopCondition; j++) {
+                                        if(i > 0 && j == 0) 
+                                            data += ",";
+                                        data += citations[j];
+                                        if(j < loopCondition - 1) 
                                             data += ",";
                                     }
-                                    
-                                    $.ajax({
-                                        url: url,
-                                        type: "POST",
-                                        dataType: "text",
-                                        data: data,
-                                        contentType: "text/plain",
-                                        success: function(data) {
-                                            var docs = JSON.parse(data);
-                                            counter++;
-                                            console.log(obj);
-                                            if(counter == obj.documents.length)
-                                                console.log("done");
-                                        }
-                                    });
                                 }
-                                console.log(obj.documents.length);
-                                buildGraph(obj.documents);
+                                console.log(data);
+                                $.ajax({
+                                    url: url,
+                                    type: "POST",
+                                    dataType: "text",
+                                    data: data,
+                                    contentType: "text/plain",
+                                    success: function(response) {
+                                        var obj = JSON.parse(response);
+                                        // console.log(response);
+                                        var initialCount = nodeMap.length;
+                                        nodeMap = nodeMap.concat(obj.documents);
+                                        console.log(nodeMap);
+                                        console.log(initialCount);
+                                        console.log(nodeMap.length);
+                                        buildGraph(nodeMap, initialCount);
+                                    }
+                                })
                             }
                         });
                     });	

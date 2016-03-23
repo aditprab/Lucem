@@ -83,6 +83,28 @@ public class Application extends Controller {
           }
           return ok(result);
      }
+     
+    public static Result testGraph() {
+         Random rand = new Random();
+         int count = 5;
+         int total = 10;
+         String obj = "{\"documents\":[";
+         for(int i = 0; i < total; i++) {
+               obj += "{\"opinions_cited\":[";
+               //int citationCount = rand.nextInt(10) + 1;
+               for(int j = 0; j < count; j++) {
+                    obj += "" + i;
+                    if(j < count - 1) 
+                              obj += ",";
+               }
+               obj += "]}";
+               if(i < total - 1)
+                    obj += ",";
+         }
+         obj += "]";
+         obj += ",\"initial_count\":" + count + "}";
+         return ok(obj);
+    }    
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();
