@@ -185,8 +185,8 @@
                             if(i < container.length - 1)
                                 data += ",";
                         }
-                        //var url = "/getDocuments";
-                        var url = "http://52.36.127.109:9000/getDocuments"
+                        
+			var url = "http://52.36.127.109:9000/getDocuments"
                         $.ajax({
                             url: url,
                             type: "POST",
@@ -196,14 +196,14 @@
                             success: function(data) {
                                 var obj = JSON.parse(data);
 				                console.log(obj.documents);
-                                for(var i = 0; i < obj.documents.length; i++) {
-                                    var citations = cleanCitations(obj.documents[i].opinions_cited);
-                                    var data = "";
-                                    for(var j = 0; j < citations.length; j++) {
-                                        data += citations[i];
-                                        if(j < citations.length - 1) 
-                                            data += ",";
-                                    }
+                        	        for(var i = 0; i < obj.documents.length; i++) {
+                                	    var citations = cleanCitations(obj.documents[i].opinions_cited);
+                                	    var data = "";
+                                	    for(var j = 0; j < citations.length; j++) {
+                                	    data += citations[i];
+                                        	if(j < citations.length - 1) 
+                                            		data += ",";
+                                   	 }
                                     
                                     $.ajax({
                                         url: url,
@@ -220,6 +220,7 @@
                                         }
                                     });
                                 }
+	
                                 console.log(obj.documents.length);
                                 buildGraph(obj.documents);
                             }

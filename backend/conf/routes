@@ -8,14 +8,18 @@ GET	    /Lucem	   		            controllers.Application.test()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-GET		/search						controllers.Assets.at(path="/public", file="html/search.html")
-POST	/search						controllers.Application.query()
+GET	/search		            controllers.Assets.at(path="/public", file="html/search.html")
+POST	/search			    controllers.Application.query()
 
-GET     /login						controllers.Application.login()
-POST    /login						controllers.Application.authenticate()
+GET     /login			    controllers.Application.login()
+POST    /login			    controllers.Application.authenticate()
+
+GET	/similar		    controllers.Application.getSimilar(docId:String)
+
 
 GET     /signup                     controllers.Application.signup()
-POST    /signup						controllers.Application.addUser()
+POST    /signup			    controllers.Application.addUser()
+
 GET     /results                    controllers.Application.results()
 
 GET     /graph                      controllers.Application.graph()
@@ -23,4 +27,4 @@ POST    /findCitations              controllers.Application.findCitations()
 
 POST    /getDocuments               controllers.Application.getDocuments()
 
-GET     /graph-js                     controllers.Assets.at(path="/public", file="javascripts/graph.js")
+GET     /graph-js                   controllers.Assets.at(path="/public", file="javascripts/graph.js")

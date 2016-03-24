@@ -60,8 +60,9 @@ public class Application extends Controller {
 
     public static Result findCitations() {
         Query query = new Query();
-        String result = query.findCitations(1724);
-    	   return ok(result);
+        
+	String result = query.findCitations(1724);
+    	return ok(result);
     }
      public static Result getDocuments() {
           String[] stringIds;
@@ -83,6 +84,15 @@ public class Application extends Controller {
           }
           return ok(result);
      }
+
+    public static Result getSimilar(String docId){	
+	
+	Similar similar = new Similar();
+	List<Integer> ids = similar.querySolrForSimilarDocs(docId);
+	System.out.println(ids);
+	
+	return ok(ids.toString());	
+    }
 
     public static Result addUser() {
         Map<String, String[]> form = request().body().asFormUrlEncoded();

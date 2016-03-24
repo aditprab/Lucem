@@ -19,8 +19,9 @@ public class Query{
 		//Returns an ArrayList of document ids, highest score in array[0], second in array[1], etc.
 
 		List<Integer> ranked = new ArrayList<Integer>();
-
+		query = query.replaceAll("\\s", "+");
 		String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid&rows=50&wt=json";
+		System.out.println("Solr endpoint queried: " + endpoint);
 		URL url = new URL(endpoint);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod("GET");
@@ -57,7 +58,6 @@ public class Query{
 
 	
 	public static String queryCourtListener(List<Integer> ids) throws Exception{
-		//Ideally change this to something that makes a REST call to court listener  instead of looking locally?
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\"documents\":[");
@@ -78,6 +78,8 @@ public class Query{
                        	 	}
 			}
 		}
+		if(sb.charAt(sb.length() - 1) == ',')
+			sb.deleteCharAt(sb.length() -1);
 		sb.append("]}");
 		return sb.toString();
 	}
