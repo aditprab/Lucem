@@ -20,15 +20,62 @@ function getTitle(url) {
     var buff = url.split("/");
     var title = buff[buff.length -2];
     return title.replace(/-/g, " ");
+    /*buff = title.split("-");
+    title = "";
+    for(var i = 0; i < buff.length; i++) 
+        title += buff[i][0];
+    return title;*/
 }
+
+function getContent(node) {
+    if(node.html_with_citations != "")
+        return node.html_with_citations;
+    else if(node.html_lawbox != "")
+        return node.html_lawbox;
+    else if(node.html_columbia != "")
+        return node.html_columbia;
+    else if(node.html != "")
+        return node.html;
+    else
+        return node.plain_text;
+        
+}
+
+// Code snippet taken from https://bl.ocks.org/mbostock/3231298
+function collide(node, label) {
+  var r = node.radius + label[0][0].getBBox().width,
+      nx1 = node.x - r,
+      nx2 = node.x + r,
+      ny1 = node.y - r,
+      ny2 = node.y + r;
+  return function(quad, x1, y1, x2, y2) {
+    if (quad.point && (quad.point !== node)) {
+      var x = node.x - quad.point.x,
+          y = node.y - quad.point.y,
+          l = Math.sqrt(x * x + y * y),
+          r = node.radius + quad.point.radius;
+      if (l < r) {
+        l = (l - r) / l * .5;
+        node.x -= x *= l;
+        node.y -= y *= l;
+        quad.point.x += x;
+        quad.point.y += y;
+      }
+    }
+    return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+  };
+}
+// End code snippet
 
 $(document).ready(function() {
     //testGraph();
     //buildGraph();
 });
 
-var width = 1000;
+var width = $("#d3-graph").width();
 var height = 800;
+var radius = 20;
+var linkDistance = 50;
 
 var data = [
     // main node
@@ -248,12 +295,13 @@ var links = [
 
 function buildGraph(nodes, count) {
     // selected case
+    width = $("#d3-graph").width();
     console.log(nodes.length);
     var data = [
         {
-            fixed: true,
+            fixed: false,
             radius: 20,
-            x: width/2,
+            x: 20,
             y: height/2,
             group: 0,
             color: "#cca300"
@@ -273,15 +321,19 @@ function buildGraph(nodes, count) {
     var pad = 0;
     for(var i = 0; i < nodes.length; i++) {
         var node = {
-            radius: 10,
-            title: getTitle(nodes[i].absolute_url)
+            fixed: false,
+            x: 2 * 40 * ((i / count) + 1),
+            y: i,
+            radius: radius,
+            title: getTitle(nodes[i].absolute_url),
+            content: getContent(nodes[i])
         };
         /*if(nodes[i].opinions_cited.length == 0) {
             console.log("no citations");
             continue;
         }*/
         var casesSeen = 0;
-        var maxNodes = 2;
+        var maxNodes = 5;
         var loopCondition;
         if(maxNodes < nodes[i].opinions_cited.length)
             loopCondition = maxNodes;
@@ -312,6 +364,7 @@ function buildGraph(nodes, count) {
     }
     console.log(data);
     console.log(links);
+    $("#d3-graph").html("");
     var container = d3.select("#d3-graph").append("svg")
         .attr({
             width: width,
@@ -320,7 +373,7 @@ function buildGraph(nodes, count) {
         
     var force  = d3.layout.force()
         .size([width, height])
-        .linkDistance(20)
+        .linkDistance(linkDistance)
         .nodes(data)
         .links(links)
         .charge(function(d, i) {
@@ -352,7 +405,7 @@ function buildGraph(nodes, count) {
                 return "black";
             }
         });
-        // .call(force.drag);
+        //.call(force.drag);
 
     var label = nodeGroup.append("text")
         .text(function(d, i) {
@@ -360,9 +413,30 @@ function buildGraph(nodes, count) {
         })
         .attr("transform", function(d) {
             return "translate(0," + -d.radius + ")"
+        })
+        .attr("visibility", "hidden");
+    
+    nodeGroup
+        .on("click", function(d, i) {
+            $("#document").html(d.content);
+            console.log(d.content);
+        })
+        .on("mouseover", function(d, i) {
+            d3.select(this).select("text").attr("visibility", "");
+        })
+        .on("mouseout", function(d, i) {
+            d3.select(this).select("text").attr("visibility", "hidden");
         });
-
+    
     force.on("tick", function() {
+        // Code snippet from https://bl.ocks.org/mbostock/3231298
+        var q = d3.geom.quadtree(data),
+        i = 0,
+        n = data.length;
+
+        while (++i < n) q.visit(collide(data[i], d3.select(label[0][i])));
+        // End code snippet
+        
         nodeGroup.attr({
             /*cx: function(d) {
                 return d.x;

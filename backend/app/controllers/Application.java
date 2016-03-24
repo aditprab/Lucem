@@ -86,18 +86,20 @@ public class Application extends Controller {
      
     public static Result testGraph() {
          Random rand = new Random();
-         int count = 5;
-         int total = 10;
+         int count = 2;
+         int total = 6;
          String obj = "{\"documents\":[";
          for(int i = 0; i < total; i++) {
                obj += "{\"opinions_cited\":[";
                //int citationCount = rand.nextInt(10) + 1;
                for(int j = 0; j < count; j++) {
-                    obj += "" + i;
+                    obj += "" + 0;
                     if(j < count - 1) 
                               obj += ",";
                }
-               obj += "]}";
+               obj += "]";
+               obj += ", \"resource_uri\": 0";
+               obj += ", \"absolute_url\": \"test/\"}";
                if(i < total - 1)
                     obj += ",";
          }

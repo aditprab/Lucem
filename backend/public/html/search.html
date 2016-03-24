@@ -11,6 +11,7 @@
      padding:0;
    }
    #global-container {
+       
    }
    #img-container {
      height:50%;
@@ -83,7 +84,15 @@
    }
    #nav-container a {
     font-size:0.9em;
+    float: right;
    }
+   
+   #nav-container > div {
+       display: inline-block;
+       width: 49%;
+       vertical-align: middle;
+   }
+   
    #modal-background {
         position:fixed;
         top:0;
@@ -104,6 +113,33 @@
         transform:translateY(-50%);
         z-index:2;
       }
+    #results {
+        width: 40%;
+        float: left;
+        position: relative;
+    }
+    
+    #d3-graph {
+        width: 60%;
+        float: left;
+    }
+    
+    #results > div {
+        margin-left: 15%;
+        margin-top: 20px;
+    }
+   
+    .title {
+        margin-bottom: 10px;
+    }   
+    
+    .title > h3 {
+        display: inline;
+    }
+    
+    .options {
+        margin-top: 10px;
+    }
 
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -114,6 +150,8 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
   <script>
+     
+     var documents = []; 
       
      function cleanCitations(citations) {
         var ids = [];
@@ -124,6 +162,25 @@
             ids.push(entries[entries.length-2]);
         }
         return ids;
+    }
+    
+    function getTitle(url) {
+        var buff = url.split("/");
+        var title = buff[buff.length - 2];
+        return title.replace(/-/g, " ");
+    }
+    
+    function resultHandler() {
+        var modalBackground = "<div id=\"modal-background\"></div>";
+        var containerHTML = "<div id=\"modal-container\"></div>";
+        $("body").prepend(modalBackground);
+        $("#modal-background").append(containerHTML);
+        $("#modal-background").click(function() {
+            if($(event.target).is("#modal-background")) {
+                    $("#modal-background").remove();
+            }
+        });
+        $("#modal-container").append($(this).data("content"));
     }
     
     
@@ -143,6 +200,48 @@
                         console.log("error");
                         return;
                     }
+                    var docs = json.documents;
+                    var citations = [];
+                    $("#results").html("");
+                    if($("#nav-container").find($("#form-container")).length == 0) {
+                        $("#img-container").css("display", "none");
+                        $("#nav-container").prepend($("<div>").html($("#form-container")));
+                        $("#form-container").css({
+                            display: "inline-block",
+                            margin: "0",
+                            float: "left"
+                        });
+                        $("#form-container").find("form").css({
+                            marginBottom: "0"
+                        });
+                        $("#form-container").find("a").css({
+                            lineHeight: $("#nav-container").css("height")
+                        });
+                        $("#results").css("top", $("#nav-container").css("height"));
+                    }
+                    for(var i = 0; i < docs.length; i++) {
+                        citations[i] = cleanCitations(docs[i].opinions_cited);
+                        var result = $("<div>");
+                        var title = $("<h3>");
+                        var link = $("<a>");
+                        var showCitations = $("<a>");
+                        var options = $("<div>");
+                        title.html(getTitle(docs[i].absolute_url));
+                        link.html(title);
+                        link.attr("class", "title");
+                        link.attr("data-index", i);
+                        link.attr("data-content", docs[i].html);
+                        showCitations.attr("data-target", i);
+                        showCitations.attr("class", "citations");
+                        showCitations.html("Show Citations");
+                        options.append(showCitations);
+                        options.attr("class", "options");
+                        result.append(link);
+                        result.append(options);
+                        $("#results").append(result);
+                        console.log(docs[i]);
+                    }
+                    /* Start old results
                     var modalBackground = "<div id=\"modal-background\"></div>";
                         var containerHTML = "<div id=\"modal-container\"></div>";
                         $("body").prepend(modalBackground);
@@ -174,7 +273,11 @@
                         
                         i++;
 					}
-                      
+                    End previous results
+                    */
+                    
+                    $(".title").click(resultHandler);
+                    
                     $(".citations").click(function() {
                         var data = "";
                         var container = citations[$(this).data("target")];
@@ -204,7 +307,7 @@
 				                console.log(obj.documents);
                                 for(var i = 0; i < obj.documents.length; i++) {
                                     var citations = cleanCitations(obj.documents[i].opinions_cited);
-                                    var maxNodes = 2;
+                                    var maxNodes = 5;
                                     //var maxNodes = citations.length;
                                     var loopCondition;
                                     if(maxNodes < citations.length)
@@ -249,8 +352,10 @@
 <body>
   <div id="global-container">
     <div id="nav-container">
-      <a class="uppercase" href="">Home</a>
-      <a class="uppercase" href="">Logout</a>
+      <div>
+        <a class="uppercase" href="">Logout</a>
+        <a class="uppercase" href="">Home</a>
+      </div>
     </div>
     <div id="img-container">
       <div id="logo-container">
@@ -267,6 +372,8 @@
      </button>
     </form>
   </div>
+  <div id="results"></div>
   <div id="d3-graph"><div>
+  <div id="document"></div>
 </body>
 </html>
