@@ -16,6 +16,7 @@ POST    /login			    controllers.Application.authenticate()
 
 GET	/similar		    controllers.Application.getSimilar(docId:String)
 
+GET	/pagerank		    controllers.Application.getPageRank(docId:String)
 
 GET     /signup                     controllers.Application.signup()
 POST    /signup			    controllers.Application.addUser()
