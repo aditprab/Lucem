@@ -58,6 +58,21 @@ public class Application extends Controller {
         return ok(result);
     }
 
+    public static Result getPageRank(String docId){
+	//Given docId, retrieves PageRank.
+	
+	PageRank pageRank = new PageRank();
+	String rank = pageRank.getPageRank(docId);
+	if(rank == null){
+		//Not a valid docId.
+		return badRequest("invalid doc id");
+	}
+
+	return ok(rank);
+	
+    }
+
+
     public static Result findCitations() {
         Query query = new Query();
         
