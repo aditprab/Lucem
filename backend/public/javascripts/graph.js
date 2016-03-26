@@ -27,8 +27,13 @@ function getTitle(url) {
     return title;*/
 }
 
+function getId(uri) {
+    var buff = uri.split("/");
+    return buff[buff.length - 2];
+}
+
 function getContent(node) {
-    if(node.html_with_citations != "")
+    /*if(node.html_with_citations != "")
         return node.html_with_citations;
     else if(node.html_lawbox != "")
         return node.html_lawbox;
@@ -37,8 +42,8 @@ function getContent(node) {
     else if(node.html != "")
         return node.html;
     else
-        return node.plain_text;
-        
+        return node.plain_text;*/
+    return node.html;
 }
 
 // Code snippet taken from https://bl.ocks.org/mbostock/3231298
@@ -74,226 +79,10 @@ $(document).ready(function() {
 
 var width = $("#d3-graph").width();
 var height = 800;
-var radius = 20;
+var radius = 15;
 var linkDistance = 50;
 
-var data = [
-    // main node
-    {
-        fixed: false,
-        radius: 20,
-        x: width/2,
-        y: 20,
-        group: 0,
-        color: "#cca300"     
-    },
-    // cited by main node
-    {
-        radius: 30,
-        group: 1
-    },
-    {
-        radius: 40,
-        group: 1
-    },
-    {
-        radius: 10,
-        group: 1
-    },
-    {
-        radius: 10,
-        group: 1
-    },
-    {
-        radius: 30
-    },
-    {
-        radius: 40
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 30
-    },
-    {
-        radius: 40
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 30
-    },
-    {
-        radius: 40
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 30
-    },
-    {
-        radius: 40
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 30
-    },
-    {
-        radius: 40
-    },
-    {
-        radius: 10
-    },
-    {
-        radius: 10
-    }
-]
-
-var links = [
-    {
-        source: 0,
-        target: 1
-    },
-    {
-        source: 0,
-        target: 2
-    },
-    {
-        source: 0,
-        target: 3
-    },
-    {
-        source: 0,
-        target: 4
-    },
-    {
-        source: 1,
-        target: 5
-    },
-    {
-        source: 2,
-        target: 6
-    },
-    {
-        source: 3,
-        target: 7
-    },
-    {
-        source: 4,
-        target: 8
-    },
-    {
-        source: 8,
-        target: 9 
-    },
-    {
-        source: 8,
-        target: 10 
-    },
-    {
-        source: 8,
-        target: 11
-    },
-    {
-        source: 8,
-        target: 12 
-    },
-    {
-        source: 8,
-        target: 13
-    },
-    {
-        source: 5,
-        target: 14 
-    },
-    {
-        source: 5,
-        target: 15 
-    },
-    {
-        source: 5,
-        target: 16
-    },
-    {
-        source: 5,
-        target: 17 
-    },
-    {
-        source: 5,
-        target: 18
-    },
-    {
-        source: 6,
-        target: 19 
-    },
-    {
-        source: 6,
-        target: 20 
-    },
-    {
-        source: 6,
-        target: 21
-    },
-    {
-        source: 6,
-        target: 22 
-    },
-    {
-        source: 6,
-        target: 23
-    },
-    {
-        source: 7,
-        target: 24 
-    },
-    {
-        source: 7,
-        target: 25 
-    },
-    {
-        source: 7,
-        target: 26
-    },
-    {
-        source: 7,
-        target: 27 
-    },
-    {
-        source: 7,
-        target: 28
-    }
-]
-
-function buildGraph(nodes, count) {
+function buildGraph(selectedCase, nodes, count) {
     // selected case
     width = $("#d3-graph").width();
     console.log(nodes.length);
@@ -304,7 +93,10 @@ function buildGraph(nodes, count) {
             x: 20,
             y: height/2,
             group: 0,
-            color: "#cca300"
+            color: "#cca300",
+            title: selectedCase.title,
+            html: selectedCase.content,
+            citations: count
         }
     ];
     var links = [];
@@ -318,7 +110,7 @@ function buildGraph(nodes, count) {
         links.push(link);
     }
     // add nodes to data, add remaining links
-    var pad = 0;
+    var pad = count;
     for(var i = 0; i < nodes.length; i++) {
         var node = {
             fixed: false,
@@ -326,7 +118,11 @@ function buildGraph(nodes, count) {
             y: i,
             radius: radius,
             title: getTitle(nodes[i].absolute_url),
-            content: getContent(nodes[i])
+            html: getContent(nodes[i]),
+            opinions_cited: nodes[i].opinions_cited,
+            doc_id: getId(nodes[i].resource_uri),
+            citations: 0,
+            offset: 0,
         };
         /*if(nodes[i].opinions_cited.length == 0) {
             console.log("no citations");
@@ -340,12 +136,12 @@ function buildGraph(nodes, count) {
         else
             loopCondition = nodes[i].opinions_cited.length;
         for(var j = 0, k = 0; j < loopCondition; j++) {
-            if(pad + count + k < nodes.length) {
+            if(pad + k < nodes.length) {
                 //console.log(nodes[i].opinions_cited[j]);
-                if(nodes[i].opinions_cited[j] == nodes[pad + count + k].resource_uri) {
+                if(nodes[i].opinions_cited[j] == nodes[pad + k].resource_uri) {
                     var link = {
                         source: i+1,
-                        target: pad + count + k + 1
+                        target: pad + k + 1
                     };
                     console.log(link);
                     links.push(link);
@@ -357,6 +153,8 @@ function buildGraph(nodes, count) {
                 }
             }
         }
+        node.citations = casesSeen;
+        node.offset = pad;
         data.push(node);
         pad += casesSeen;
         //console.log(pad + count);
@@ -392,6 +190,17 @@ function buildGraph(nodes, count) {
     var node = nodeGroup.append("circle")
         .attr({
             r: function(d) {
+                /*$.ajax({
+                    url: "http://52.36.127.109:9000/pagerank",
+                    type: "GET",
+                    dataType: "text",
+                    data: d.doc_id,
+                    contentType: "text/plain",
+                    success: function(response) {
+                        console.log(response);
+                        return d.radius;
+                    }
+                });*/         
                 //console.log(d);
                 return d.radius;
             },
@@ -464,6 +273,7 @@ function buildGraph(nodes, count) {
             }
         }); 
     });
+    return data;
 }
 
     
