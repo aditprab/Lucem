@@ -173,6 +173,12 @@
         return ids;
     }
     
+    function cleanCSL(list) {
+        if(list.charAt(0) == ',')
+            return list.substr(1);
+        return list;
+    }
+    
     function getTitle(url) {
         var buff = url.split("/");
         var title = buff[buff.length - 2];
@@ -189,28 +195,29 @@
                     $("#modal-background").remove();
             }
         });
-        $("#modal-container").append($(this).siblings(".content").html());
+        $("#modal-container").append($(this).data("content"));
     }
     
-    function citationHandler(event) {
-        console.log(event.data.citations);
+    function citationHandler() {
         var data = "";
         var selectedCase = {
             title: $(this).parent().siblings(".title").find("h3").text(),
             content: $(this).parent().siblings(".content").html()
         };
-        var container = event.data.citations[$(this).data("target")];
+        //var container = event.data.citations[$(this).data("target")];
+        var citations = $(this).data("ids");
+        console.log(citations);
         var nodeMap = [];
-        for(var i = 0; i < container.length; i++) {
-            data += container[i];
-            if(i < container.length - 1)
+        for(var i = 0; i < citations.length; i++) {
+            data += citations[i];
+            if(i < citations.length - 1)
                 data += ",";
         }
-        if(container.length == 0) {
+        if(citations.length == 0) {
             console.log("empty");
             return;
         }
-        console.log(data);
+        data = cleanCSL(data);
         //var url = "/getDocuments";
         var url = "http://52.36.127.109:9000/getDocuments";
         $.ajax({
@@ -241,6 +248,7 @@
                             data += ",";
                     }
                 }
+                data = cleanCSL(data);
                 console.log(data);
                 $.ajax({
                     url: url,
@@ -264,28 +272,26 @@
         });
     }
     
-    function buildResult(caseTitle, content, index) {
+    function buildResult(caseTitle, content, ids, index) {
         var result = $("<div>");
         var title = $("<h3>");
         var link = $("<a>");
         var showCitations = $("<a>");
         var options = $("<div>");
-        var content = $("<div>").html(content)
-            .css("display", "none")
-            .attr("class", "content");
         title.html(caseTitle);
         title.attr("class", "group-" + index);
+        link.data("content", content);
         link.html(title);
         link.attr("class", "title");
-        link.attr("data-index", index);
-        showCitations.attr("data-target", index);
+        //link.attr("data-index", index);
+        showCitations.data("target", index);
+        showCitations.data("ids", ids);
         showCitations.attr("class", "citations");
         showCitations.html("Show Citations");
         options.append(showCitations);
         options.attr("class", "options");
         result.append(link);
         result.append(options);
-        result.append(content);
         result.attr("class", "result");
         return result;
     }
@@ -303,15 +309,15 @@
         while(true) {
             if(docs[i].offset == docs.length - 1)
                 break;
-            var result = buildResult(docs[i].title, docs[i].html, i);
+            var result = buildResult(docs[i].title, docs[i].html, cleanCitations(docs[i].opinions_cited), i);
             var list = showChildren(docs[i], docs);
-            citations[i] = cleanCitations(docs[i].opinions_cited);
+            //citations[i] = cleanCitations(docs[i].opinions_cited);
             result.append(list);
             $("#results").append(result);
             i++;
         }
         $(".title").click(resultHandler);
-        $(".citations").click({citations: citations}, citationHandler);
+        $(".citations").click(citationHandler);
     }
     
     function showChildren(currentDoc, docs) {
@@ -321,7 +327,7 @@
         var count = 0;
         while(count < currentDoc.citations) {
             var li = $("<li>");
-            var result = buildResult(docs[i].title, docs[i].html, i);
+            var result = buildResult(docs[i].title, docs[i].html, cleanCitations(docs[i].opinions_cited), i);
             li.append(result);
             list.append(li);
             count++;
@@ -368,14 +374,14 @@
                         $("#d3-graph").css("top", $("#nav-container").css("height"));
                     }
                     for(var i = 0; i < docs.length; i++) {
-                        citations[i] = cleanCitations(docs[i].opinions_cited);
+                        var ids = cleanCitations(docs[i].opinions_cited);
                         var content = docs[i].html;
                         var caseTitle = getTitle(docs[i].absolute_url);
-                        $("#results").append(buildResult(caseTitle, content, i));
+                        $("#results").append(buildResult(caseTitle, content, ids, i));
                     }
                     // add event handlers
                     $(".title").click(resultHandler);
-                    $(".citations").click({citations: citations}, citationHandler);
+                    $(".citations").click(citationHandler);
                     
                     /* Start old results
                     var modalBackground = "<div id=\"modal-background\"></div>";

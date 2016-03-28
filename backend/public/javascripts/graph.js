@@ -163,6 +163,42 @@ function buildGraph(selectedCase, nodes, count) {
     console.log(data);
     console.log(links);
     $("#d3-graph").html("");
+    
+    var ranks = [];
+       
+    for(var i = 0; i < data.length; i++) {
+        var field = "docId=";
+        $.ajax({
+            url: "http://52.36.127.109:9000/pagerank",
+            async: false,
+            type: "GET",
+            dataType: "text",
+            data: field + data[i].doc_id,
+            contentType: "text/plain",
+            success: function(response) {
+                ranks.push(parseFloat(response));
+            }
+        });
+    }
+    
+    var log = d3.scale.log();
+    var sqrt = d3.scale.sqrt();
+    var linear = d3.scale.linear()
+        .domain([d3.min(ranks), d3.max(ranks)])
+        .range([15, 30]);
+    
+    for(var i = 0; i < data.length; i++) {
+        var r;
+        // linear scale
+        r  = linear(ranks[i]);        
+                
+        // sqrt scale
+        // r = radius * sqrt(ranks[i]) * 100;
+        
+        data[i].radius = isNaN(r) ? radius : r;
+        console.log(data[i].radius);
+    }
+    
     var container = d3.select("#d3-graph").append("svg")
         .attr({
             width: width,
@@ -189,19 +225,7 @@ function buildGraph(selectedCase, nodes, count) {
 
     var node = nodeGroup.append("circle")
         .attr({
-            r: function(d) {
-                /*$.ajax({
-                    url: "http://52.36.127.109:9000/pagerank",
-                    type: "GET",
-                    dataType: "text",
-                    data: d.doc_id,
-                    contentType: "text/plain",
-                    success: function(response) {
-                        console.log(response);
-                        return d.radius;
-                    }
-                });*/         
-                //console.log(d);
+            r: function(d, i) {
                 return d.radius;
             },
             fill: function(d) {
