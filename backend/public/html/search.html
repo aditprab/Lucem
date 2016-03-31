@@ -113,7 +113,7 @@
         transform:translateY(-50%);
         z-index:2;
       }
-    #results {
+    #results-wrapper {
         width: 40%;
         float: left;
         position: relative;
@@ -149,6 +149,12 @@
     .result ul {
         margin-top: 10px;
     }
+    
+    .back {
+        display: none;
+        margin-top: 10px;
+        margin-left: 40px;
+    }
    
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -161,6 +167,7 @@
   <script>
      
      var documents = []; 
+     var states = [];
       
      function cleanCitations(citations) {
         var ids = [];
@@ -199,6 +206,7 @@
     }
     
     function citationHandler() {
+        saveState();
         var data = "";
         var selectedCase = {
             title: $(this).parent().siblings(".title").find("h3").text(),
@@ -272,6 +280,44 @@
         });
     }
     
+    function backHandler() {
+        if(states.length == 0) {
+            console.log("empty");
+            return;
+        }
+        var state = states.pop();
+        $("body").html(state.content);
+        console.log(state);
+        var results = $("body").find(".result");
+        for(var i = 0; i < results.length; i++) {
+            var result = $(results[i]);
+            result.find(".title").data("content", state.data[i].title);
+            result.find(".citations").data("ids", state.data[i].citation);
+        }
+        attachHandlers();
+        $(".back").click(backHandler);
+    }
+    
+    function attachHandlers() {
+        $(".title").click(resultHandler);
+        $(".citations").click(citationHandler);
+    }
+    
+    function saveState() {
+        var data = [];
+        var results = $("body").find(".result");
+        for(var i = 0; i < results.length; i++) {
+            data.push({
+                title: $(results[i]).find(".title").data("content"),
+                citation: $(results[i]).find(".citations").data("ids")
+            });
+        }
+        states.push({
+            content: $("body").html(),
+            data: data
+        });
+    }
+    
     function buildResult(caseTitle, content, ids, index) {
         var result = $("<div>");
         var title = $("<h3>");
@@ -300,7 +346,8 @@
         //console.log(selectedCase.title);
         $("#results").html("");
         var header = $("<h2>");
-        console.log(docs[0]);
+        var data = [];
+        //console.log(docs[0]);
         header.html("Citations for: " + docs[0].title);
         $("#results").append(header);
         var i = 1;
@@ -316,13 +363,13 @@
             $("#results").append(result);
             i++;
         }
-        $(".title").click(resultHandler);
-        $(".citations").click(citationHandler);
+        attachHandlers();
+        console.log(states);
     }
     
     function showChildren(currentDoc, docs) {
         var list = $("<ul>");
-        console.log(currentDoc);
+        //console.log(currentDoc);
         var i = currentDoc.offset + 1;
         var count = 0;
         while(count < currentDoc.citations) {
@@ -338,6 +385,8 @@
     
     
   	$(document).ready(function(){
+        
+        $(".back").click(backHandler);
         
         $("#search").submit(function(e){
             var url = "http://52.36.127.109:9000/search"
@@ -355,6 +404,7 @@
                     }
                     var docs = json.documents;
                     var citations = [];
+                    var data = [];
                     $("#results").html("");
                     if($("#nav-container").find($("#form-container")).length == 0) {
                         $("#img-container").css("display", "none");
@@ -370,19 +420,20 @@
                         $("#form-container").find("a").css({
                             lineHeight: $("#nav-container").css("height")
                         });
-                        $("#results").css("top", $("#nav-container").css("height"));
+                        $("#results-wrapper").css("top", $("#nav-container").css("height"));
                         $("#d3-graph").css("top", $("#nav-container").css("height"));
+                        $(".back").css("display", "inline-block");
                     }
                     for(var i = 0; i < docs.length; i++) {
                         var ids = cleanCitations(docs[i].opinions_cited);
                         var content = docs[i].html;
                         var caseTitle = getTitle(docs[i].absolute_url);
-                        $("#results").append(buildResult(caseTitle, content, ids, i));
+                        var result = buildResult(caseTitle, content, ids, i);
+                        $("#results").append(result);
                     }
                     // add event handlers
-                    $(".title").click(resultHandler);
-                    $(".citations").click(citationHandler);
-                    
+                    attachHandlers();
+                    // push current state onto stack
                     /* Start old results
                     var modalBackground = "<div id=\"modal-background\"></div>";
                         var containerHTML = "<div id=\"modal-container\"></div>";
@@ -445,7 +496,11 @@
      </button>
     </form>
   </div>
-  <div id="results"></div>
+  <div id="results-wrapper">
+    <a class="back">Back</a>
+    <div id="results">
+  </div>
+  </div>
   <div id="d3-graph"><div>
   <div id="document"></div>
 </body>

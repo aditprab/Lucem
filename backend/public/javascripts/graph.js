@@ -196,7 +196,7 @@ function buildGraph(selectedCase, nodes, count) {
         // r = radius * sqrt(ranks[i]) * 100;
         
         data[i].radius = isNaN(r) ? radius : r;
-        console.log(data[i].radius);
+        //console.log(data[i].radius);
     }
     
     var container = d3.select("#d3-graph").append("svg")
