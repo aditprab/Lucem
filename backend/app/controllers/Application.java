@@ -44,7 +44,7 @@ public class Application extends Controller {
     }
     
     public static Result results() {
-    	return ok(results.render(menu.render()));
+    	return ok(results.render());
     }
     
     public static Result graph() {
@@ -154,10 +154,10 @@ public class Application extends Controller {
     public static Result getSimilar(String courtId) throws Exception{	
 	
 	Similar similar = new Similar();
-	List<Integer> ids = similar.querySolrForSimilarDocs(courtId);
+	String ids = similar.querySolrForSimilarDocs(courtId);
 	System.out.println(ids);
 	
-	return ok(ids.toString());	
+	return ok(ids);	
     }
     
     public static Result caseInfo(String docId){

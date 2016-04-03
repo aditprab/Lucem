@@ -11,7 +11,7 @@ import play.Logger;
 
 public class Similar{
 	
-	public static List<Integer> querySolrForSimilarDocs(String courtId) throws Exception{
+	public static String querySolrForSimilarDocs(String courtId) throws Exception{
 	  	 List<Integer> courtIds = new ArrayList<Integer>();	
 	
 		
@@ -33,7 +33,7 @@ public class Similar{
 		
 	
 		courtIds.add(Integer.parseInt(courtId));	
-		return courtIds;	
+		return sb.toString();	
 	}
 
 }
