@@ -19,22 +19,6 @@ public class Application extends Controller {
 
     private static final JsonNodeFactory factory = JsonNodeFactory.instance;
 
-    public static Result index() {
-      Validator validator = new Validator();
-      Http.Session session = Http.Context.current().session();
-      Result res;
-      String username = validator.getUsername();
-      if(username == null) {
-        res = ok("null username");
-        session.put("username", "nathan.tlam@gmail.com");
-      } else {
-        res = ok(username);
-      }
-// in whichever method calls User.authenticate, add the session.put code. in every other GET request, it should check if username is set.
-// maybe have two databases. one stores emails and passwords, while the other contains the sessions associated with the username/a hash of the username
-      return res;
-    }
-
     public static Result test(){
 	    return ok(index.render("Test successful."));
     }
