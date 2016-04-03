@@ -29,7 +29,9 @@ POST    /findCitations              controllers.Application.findCitations()
 
 POST    /getDocuments               controllers.Application.getDocuments()
 
-GET     /graph-js                     controllers.Assets.at(path="/public", file="javascripts/graph.js")
+GET     /graph-js                   controllers.Assets.at(path="/public", file="javascripts/graph.js")
+GET     /similar-js                 controllers.Assets.at(path="/public", file="javascripts/similar.js")
+GET     /facet-js                   controllers.Assets.at(path="/public", file="javascripts/facet.js")
 
 POST    /testGraph                  controllers.Application.testGraph()
 
