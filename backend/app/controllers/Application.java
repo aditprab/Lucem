@@ -124,13 +124,19 @@ public class Application extends Controller {
          return ok(obj);
     }    
 
-    public static Result getSimilar(String docId){	
+    public static Result getSimilar(String courtId) throws Exception{	
 	
 	Similar similar = new Similar();
-	List<Integer> ids = similar.querySolrForSimilarDocs(docId);
+	List<Integer> ids = similar.querySolrForSimilarDocs(courtId);
 	System.out.println(ids);
 	
 	return ok(ids.toString());	
+    }
+    
+    public static Result caseInfo(String docId){
+	
+	CaseInfoUtil caseInfo = new CaseInfoUtil();
+	return ok();
     }
 
     public static Result addUser() {
@@ -161,4 +167,5 @@ public class Application extends Controller {
         return true;
     }
 
+ 
 }

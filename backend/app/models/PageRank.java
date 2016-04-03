@@ -26,8 +26,7 @@ public class PageRank{
 			if(temp[0].equals(docId)){
 				
 				System.out.println("Found, PageRank is " + temp[1]);
-				return temp[1];
-		
+				return temp[1];	
 			}
                 }
 

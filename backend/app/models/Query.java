@@ -20,7 +20,8 @@ public class Query{
 
 		List<Integer> ranked = new ArrayList<Integer>();
 		query = query.replaceAll("\\s", "+");
-		String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid&rows=50&wt=json";
+		String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid+id&rows=50&wt=json";
+//Old endpoint (doesn't return Solr's internal doc id) String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid&rows=50&wt=json";
 		System.out.println("Solr endpoint queried: " + endpoint);
 		URL url = new URL(endpoint);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -39,14 +40,13 @@ public class Query{
 		JSONObject outerJSON = new JSONObject(sb.toString());
 		JSONObject responseJSON = outerJSON.getJSONObject("response");
 		JSONArray jsonArray = responseJSON.getJSONArray("docs");
-
+		
 		for (int i = 0; i < jsonArray.length(); i++) {  // **line 2**
 		     JSONObject childJSONObject = jsonArray.getJSONObject(i);
 		    	
 		     JSONArray temp = childJSONObject.getJSONArray("courtid");
 		     int id = temp.optInt(0);
 		     Double score = childJSONObject.getDouble("score");
-
 		     placeInList(ranked, id);
 		     
 		}
@@ -58,12 +58,13 @@ public class Query{
 
 	
 	public static String queryCourtListener(List<Integer> ids) throws Exception{
-
+		
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\"documents\":[");
 		Logger.debug(Integer.toString(ids.size()));
 		for(int i=0; i < ids.size(); i++){	
  			String path = "/data/solr-5.4.1/scotus/";
+			
 			String id = Integer.toString(ids.get(i));
 			path = path + id + ".json";
 			File file = new File(path);
@@ -73,6 +74,7 @@ public class Query{
 				while((line = br.readLine()) != null){
 					sb.append(line);
 				}
+
 				if(i < ids.size() - 1) {
 			  		sb.append(",");
                        	 	}
