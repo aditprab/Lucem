@@ -1,0 +1,39 @@
+#form-container {
+  position:relative;
+  margin:2.5em 3em;
+}
+input[type="text"], input[type="password"], textarea, .submit {
+  background-color:white;
+  color:black;
+  border:4px solid black;
+}
+input[type="text"], input[type="password"], textarea {
+  display:block;
+  width:100%;
+  margin:0.25em auto 0.75em auto;
+  padding:0.25em;
+  font-family:'Raleway', sans-serif;
+  font-size:16px;
+  text-align:left;
+}
+textarea {
+  font-family:'Raleway', sans-serif;
+}
+.unresizeable {
+  resize:none;
+}
+.uppercase {
+  text-transform:uppercase;
+}
+.label {
+  font-weight:700;
+}
+.submit {
+  font-family:'Raleway', sans-serif;
+  font-weight:700;
+  font-size:14px;
+  padding:0.5em 0.75em;
+  cursor:pointer;
+  display:block;
+  margin:15px auto 0 auto;
+}

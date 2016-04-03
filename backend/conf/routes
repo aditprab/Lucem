@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index()
+GET     /                           controllers.Assets.at(path="/public", file="html/index.html")
 GET	    /Lucem	   		            controllers.Application.test()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
@@ -18,7 +18,6 @@ GET	/similar		    controllers.Application.getSimilar(docId:String)
 
 GET	/pagerank		    controllers.Application.getPageRank(docId:String)
 
-GET     /signup                     controllers.Application.signup()
 POST    /signup			    controllers.Application.addUser()
 
 GET     /results                    controllers.Application.results()
@@ -31,3 +30,10 @@ POST    /getDocuments               controllers.Application.getDocuments()
 GET     /graph-js                     controllers.Assets.at(path="/public", file="javascripts/graph.js")
 
 POST    /testGraph                  controllers.Application.testGraph()
+
+GET     /sessions                   controllers.Assets.at(path="/public", file="html/sessions.html")
+
+GET     /session                    controllers.Application.getSessions()
+POST    /session                    controllers.Application.addSession()
+
+GET     /validate                   controllers.Application.validate()

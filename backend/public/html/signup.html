@@ -1,0 +1,44 @@
+<html lang="en">
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Raleway:500,700' rel='stylesheet' type='text/css'>
+  <link href='/assets/stylesheets/form.css' rel='stylesheet' type='text/css'>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $("#signup").submit(function(e){
+        var url = "/signup";
+        e.preventDefault();
+        if($('#confirm').val() != $('#password').val()) {
+          alert("passwords do not match");
+          return;
+        }
+
+        var obj = {"email":$('#email').val(), "password":$('#password').val()};
+
+        $.ajax({
+          type: 'POST',
+          contentType: 'application/json',
+          url: url,
+          data: JSON.stringify(obj)
+        }).done(function(res) {
+          alert(res.error);
+        });
+
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="form-container">
+    <form id="signup">
+      <span class="label uppercase">Email:</span>
+      <input id="email" name="email" type="text"></input>
+      <span class="label uppercase">Password:</span>
+      <input id="password" name="password" type="password"></input>
+      <span class="label uppercase">Confirm Password:</span>
+      <input id="confirm" name="confirm" type="password"></input>
+      <button class="submit uppercase inverted" type="submit" value="Sign Up">Sign Up</input>
+    </form>
+  </div>
+</body>
+</html>

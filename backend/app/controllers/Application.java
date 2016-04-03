@@ -3,6 +3,13 @@ package controllers;
 import play.*;
 import play.mvc.*;
 
+// following are necessary to handle JSON requests and responses
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import views.html.*;
 import models.*;
 
@@ -10,8 +17,22 @@ import java.util.*;
 
 public class Application extends Controller {
 
+    private static final JsonNodeFactory factory = JsonNodeFactory.instance;
+
     public static Result index() {
-        return ok(index.render("Lucem is ready. AJ's Branch"));
+      Validator validator = new Validator();
+      Http.Session session = Http.Context.current().session();
+      Result res;
+      String username = validator.getUsername();
+      if(username == null) {
+        res = ok("null username");
+        session.put("username", "nathan.tlam@gmail.com");
+      } else {
+        res = ok(username);
+      }
+// in whichever method calls User.authenticate, add the session.put code. in every other GET request, it should check if username is set.
+// maybe have two databases. one stores emails and passwords, while the other contains the sessions associated with the username/a hash of the username
+      return res;
     }
 
     public static Result test(){
@@ -31,24 +52,30 @@ public class Application extends Controller {
     }
 
     public static Result authenticate() {
-        Map<String, String[]> form = request().body().asFormUrlEncoded();
+        Http.Session session = Http.Context.current().session();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
         final String [] expect = {"email", "password"};
-        if(isValidRequest(form, expect) == false) {
-            return badRequest("bad"); 
+        boolean authenticated;
+
+        if(isValidRequest(req, expect) == false) {
+            res.put("error", "invalid request");
+            return badRequest(res); 
         }
-        boolean authenticated = User.authenticate(form.get("email")[0],
-                                            form.get("password")[0]);
+
+        authenticated = User.authenticate(req.get("email").asText(),
+                                          req.get("password").asText());
+
         if(authenticated == false) {
-            return ok("incorrect login");
+            res.put("error", "incorrect login");
+            return ok(res);
         }
 
-        return ok("logged in");
-    }
+        res.put("status", "ok");
+        session.put("email", req.get("email").asText());
 
-    public static Result signup() {
-        return ok(signup.render());
+        return ok(res);
     }
-
 
     public static Result query() throws Exception {
         Query query = new Query();
@@ -134,27 +161,93 @@ public class Application extends Controller {
     }
 
     public static Result addUser() {
-        Map<String, String[]> form = request().body().asFormUrlEncoded();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
         final String [] expect = {"email", "password"};
         String email;
-        if(isValidRequest(form, expect) == false) {
-            return badRequest("bad"); 
+
+        if(isValidRequest(req, expect) == false) {
+            res.put("error", "invalid request");
+            return badRequest(res); 
         }
-        email = form.get("email")[0];
+
+        email = req.get("email").asText();
+
         if(User.exists(email)) {
-            return ok("user already exists");
+            res.put("error", "user already exists");
+            return ok(res);
         }
-        User user = new User(email, form.get("password")[0]);
-       return ok("created");
+
+        User user = new User(email, req.get("password").asText());
+        res.put("status", "ok");
+
+        response().setContentType("application/json");
+        return ok(res);
     }
 
-    private static boolean isValidRequest(Map<String, String[]> request,
+    public static Result getSessions() {
+        final Http.Session session = Http.Context.current().session();
+        ObjectNode res = factory.objectNode();
+
+        if(session.get("email") == null) {
+            res.put("error", "not logged in");
+            return ok(res);
+        }
+
+        User user = User.find(session.get("email"));
+
+        response().setContentType("application/json");
+        return ok(user.getSessions()); 
+    }
+
+    public static Result addSession() {
+        final Http.Session session = Http.Context.current().session();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
+        final String[] expectedKeys = {"name", "description"};
+
+        if(req == null || !isValidRequest(req, expectedKeys)) {
+          res.put("error", "invalid request");
+          if(req == null) {
+            res.put("error", request().body().asText());
+          }
+        } else {
+          User user = User.find(session.get("email"));
+
+          user.addSession(req.get("name").asText(),
+                          req.get("description").asText());
+
+          Thread t = new Thread(new SessionWriter(user));
+          t.start();
+
+          res.put("status", "ok");
+        }
+
+        response().setContentType("application/json");
+        return ok(res);
+    }
+
+    public static Result validate() {
+        final Http.Session session = Http.Context.current().session();
+        ObjectNode res = factory.objectNode();
+
+        if(session.get("email") == null) {
+            res.put("error", "user not logged in");
+        } else {
+            res.put("status", "ok");
+        }
+
+        response().setContentType("application/json");
+        return ok(res);
+    }
+
+    private static boolean isValidRequest(JsonNode request,
                                           String [] keys) {
         if(request == null) {
             return false;
         }
         for(int i = 0; i < keys.length; ++i) {
-            if(request.containsKey(keys[i]) == false) {
+            if(request.has(keys[i]) == false) {
                 return false;
             }
         }

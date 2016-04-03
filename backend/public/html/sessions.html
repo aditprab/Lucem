@@ -1,0 +1,240 @@
+<html lang="en">
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Raleway:500,700" rel="stylesheet" type="text/css">
+  <link href="/assets/stylesheets/modal.css" rel="stylesheet" type="text/css">
+  <style>
+    html, body {
+      margin:0;
+      padding:0;
+      font-family:'Raleway', sans-serif;
+    }
+    .ltr-spacing {
+      letter-spacing:5px;
+    }
+    .ltr-spacing-sml {
+      letter-spacing:1px;
+    }
+    .uppercase {
+      text-transform:uppercase;
+    }
+    #header {
+      padding-top:60px;
+      padding-bottom:60px;
+      height:15px;
+      text-align:center;
+      background-color:rgba(0,0,0,0.8);
+      background-image:url("/assets/images/Courtroom.jpg");
+      background-size:cover;
+      background-position: center center;
+      background-size:100% auto;
+      background-repeat:no-repeat;
+      color:white;
+    }
+    #header h1 {
+      margin:0 -5px 0 0;
+    }
+    #sessions-container {
+      margin:0 1.5% 5% 1.5%;
+    }
+    .session-box {
+      border:1px solid black;
+      height:305px;
+      width:225px;
+      margin:3.5% 1.5% 0 1.5%;
+      display:inline-block;
+      vertical-align:top;
+      overflow:hidden;
+    }
+    .session-box:hover {
+      cursor:pointer;
+    }
+    .session-header-content, .session-description-content {
+      padding:0 10%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+    }
+    .session-header {
+      background-color:black;
+      color:white;
+      padding-top:20px;
+      padding-bottom:20px;
+      height:38px;
+      text-align:center;
+      font-size:16px;
+      font-weight:700;
+    }
+    .session-header-content {
+      -webkit-line-clamp:2;
+      max-height:38px;
+    }
+    .session-description {
+      padding-top:15px;
+      padding-bottom:15px;
+    }
+    .session-description-content {
+      max-height:192px;
+      -webkit-line-clamp:10;  
+    }
+    #new {
+      text-align:center;
+    }
+    #new-content:before {
+      content:"+";
+      font-size:250px;
+    }
+    .center-vertical {
+      position:relative;
+      top:50%;
+      -ms-transform:translateY(-50%);
+      -webkit-transform:translateY(-50%);
+      transform:translateY(-50%);
+    }
+    #loading {
+      background-color:white;
+      position:fixed;
+      top:135px; /* should be the sum of the padding + height of #header */
+      left:0;
+      height:100%;
+      width:100%;
+      z-index:10;
+    }
+    #loading-inner {
+      top:40% !important;
+      height:60px;
+      width:60px;
+      margin:0 auto;
+      background-image:url("/assets/images/loading.gif");
+      background-size:cover;
+      background-position: center center;
+      background-size:100% auto;
+      background-repeat:no-repeat;
+    }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="/assets/javascripts/validate.js"></script>
+  <script src="/assets/javascripts/modal.js"></script>
+  <script>
+    var sessionClicked = function() {
+      alert("session clicked");
+    };
+
+    // the newSession() generates the following html structure 
+    // <div class="session session-box">
+    //   <div class="session-header ltr-spacing-sml">
+    //     <div class="session-header-content center-vertical">
+    //       <!-- name goes here-->
+    //     </div>
+    //   </div>
+    //   <div class="session-description">
+    //     <div class="session-description-content">
+    //       <!-- description goes here -->
+    //     </div>
+    //   </div>
+    // </div>
+
+    var newSession = function(name, description) {
+      $('#sessions-container').prepend(
+        $('<div/>').append(
+          $('<div/>').append(
+            $('<div/>').html(name)
+                       .addClass('session-header-content center-vertical')
+          ).addClass('session-header ltr-spacing-sml')
+        ).append(
+          $('<div/>').append(
+            $('<div/>').html(description)
+                       .addClass('session-description-content')
+            ).addClass('session-description')
+          ).addClass('session session-box')
+           .click(sessionClicked)
+        );
+    };
+
+    var loadSessions = function() {
+      var url = "/session";
+
+      $.get(url, function(res) {
+// need to check if the response is erroneous or not.
+        for(var i = 0; i < res.length; ++i) {
+          var session = res[i];
+          newSession(session.name, session.description);
+        }
+        $('#loading').remove();
+      });
+    };
+
+    // loadingScreen() generates following html:
+    // <div id="loading">
+    //   <div id="loading-inner" class="center-vertical">
+    //   </div>
+    // </div>
+    //
+    var loadingScreen = function () {
+      $('#sessions-container').prepend(
+        $('<div/>').append(
+          $('<div/>').attr('id', 'loading-inner')
+                     .addClass('center-vertical')
+        ).attr('id', 'loading')
+      );
+    };
+
+    $(document).ready(function(){
+      validate();
+
+      loadingScreen();
+      loadSessions();
+
+      $("#new").click(function(){
+        createModal("30%", "50vh");
+        $('#modal-container').load('/assets/html/session-form.html', function() {
+          $('#session-form').submit(function(e){
+            e.preventDefault();
+
+            var url = "/session";
+            var name = $('#session-name').val();
+            var description = $('#session-description').val();
+
+            // check that the session was at least given a name
+            if(name.length == 0) {
+              alert("need to give session a name");
+              return;
+            }
+
+            var obj = {"name":name, "description":description};
+
+            $.ajax({
+              type: 'POST',
+              contentType: 'application/json',
+              url: url,
+              data: JSON.stringify(obj)
+            }).done(function(res) {
+              if(res.error != null) {
+                alert(res.error);
+              }
+            });
+
+            newSession(name, description);
+            removeModal();
+          });
+        });
+      });
+      $(".session").click(function(){
+        alert("session clicked");
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="global-container">
+    <div id="header">
+      <h1 class="uppercase ltr-spacing center-vertical">Sessions</h1>
+    </div> 
+    <div id="sessions-container">
+      <div id="new" class="session-box">
+        <div id="new-content"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

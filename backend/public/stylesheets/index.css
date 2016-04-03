@@ -1,0 +1,95 @@
+html, body {
+      margin:0;
+      padding:0;
+      font-family: 'Raleway', sans-serif;
+      background-color:rgba(0,0,0,0.5);
+      background-image:url("http://www.garson-law.com/wp-content/uploads/2014/12/Gavel-on-Book.jpg");
+      background-size:cover;
+      background-position: center center;
+      background-size:auto 100%;
+      background-repeat:no-repeat;
+    }
+    #global-container {
+      /* need to have initial padding to keep prevent it from automatically
+       * collapsing in Firefox
+       */
+      padding-top:0.005%;
+      height:99%;
+    }
+    #logo-container {
+      margin:0 auto 2% auto;
+      width:375px;
+      text-align:center;
+      /* center div vertically */
+      text-align:center;
+    }
+    #logo-container h1 {
+      font-size:6em;
+      letter-spacing:0.25em;
+      /* offsets the letter spacing on the final letter*/
+      margin-left:-0.25em;
+      margin-bottom:0px;
+      color:white;
+    }
+    #logo-container hr {
+      width:30%;
+      background-color:white;
+      border-top:8px solid white;
+    }
+    .home-btn, .home-input {
+      border: 7px solid white !important;
+      letter-spacing:1.5px;
+      background-color:rgba(0,0,0,0.25);
+    }
+    .home-btn {
+      width:40%;
+      padding:0.5em;
+      margin:0.5em auto 0 auto;
+      color:white;
+      font-weight:700;
+      font-size:1.25em;
+      cursor:pointer;
+      display:block;
+    }
+    .uppercase {
+      text-transform:uppercase;
+    }
+#form-container-home {
+      width:450px;
+      margin:0 auto;
+    }
+    input[type="text"], input[type="password"] {
+      font-family:'Raleway';
+      font-size:1.15em;
+      color:white;
+      width:100%;
+      margin:0.25em auto 0.75em auto;
+      padding:0.5em;
+    }
+    .label {
+      font-weight:700;
+      color:white;
+      letter-spacing:0.05em;
+    }
+#modal-container {
+  background-color:rgba(0, 0, 0, 0.75);
+  color:white;
+}
+#signup > input[type="text"], #signup > input[type="password"], #signup > textarea, #signup > .submit{
+  background-color:rgba(0, 0, 0, 0.01);
+  border-color:white;
+  color:white;
+}
+.submit {
+  color:white;
+}
+#close {
+  color:white;
+}
+#home-container {
+      position:relative;
+      top:41%;
+      -ms-transform:translateY(-50%);
+      -webkit-transform:translateY(-50%);
+      transform:translateY(-50%);
+    }
