@@ -195,7 +195,7 @@
             $.post(url, $(this).serialize())
                 .done(function(data){
                     var json = JSON.parse(data);
-                    //console.log(json.documents[0].opinions_cited);
+		    //console.log(json.documents[0].opinions_cited);
                     if(json.documents == null) {
                         console.log("error");
                         return;

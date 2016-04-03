@@ -14,11 +14,13 @@ POST	/search			    controllers.Application.query()
 GET     /login			    controllers.Application.login()
 POST    /login			    controllers.Application.authenticate()
 
-GET	/similar		    controllers.Application.getSimilar(docId:String)
+GET	/similar		    controllers.Application.getSimilar(courtId:String)
 
 GET	/pagerank		    controllers.Application.getPageRank(docId:String)
 
 POST    /signup			    controllers.Application.addUser()
+
+GET	/caseInfo		    controllers.Application.caseInfo(docId: String)
 
 GET     /results                    controllers.Application.results()
 
