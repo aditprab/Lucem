@@ -27,13 +27,15 @@ public class Similar{
 		 while((line=br.readLine()) != null){
 			sb.append(line);
 		 }
-
-	 
-		System.out.println(sb.toString());
-		
-	
+	 		
 		courtIds.add(Integer.parseInt(courtId));	
-		return sb.toString();	
+
+	        JSONObject outerJSON = new JSONObject(sb.toString());
+                JSONObject responseJSON = outerJSON.getJSONObject("response");
+                JSONArray jsonArray = responseJSON.getJSONArray("docs");
+		
+		return jsonArray.toString();	
+
 	}
 
 }
