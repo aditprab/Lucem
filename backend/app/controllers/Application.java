@@ -23,7 +23,7 @@ public class Application extends Controller {
     }
     
     public static Result results() {
-    	return ok(results.render());
+    	return ok(results.render(menu.render()));
     }
     
     public static Result graph() {

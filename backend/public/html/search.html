@@ -158,9 +158,11 @@
    
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-  <script src="/graph-js"></script>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8" defer></script>
-
+  <script src="/graph-js" defer></script>
+  <script src="/similar-js" defer></script>
+  <script src="/facet-js" defer><script>
+  
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
@@ -323,17 +325,34 @@
         var title = $("<h3>");
         var link = $("<a>");
         var showCitations = $("<a>");
+        var similarity = $("<a>");
+        var facets = $("<a>");
         var options = $("<div>");
+        
+        // Set up title
         title.html(caseTitle);
         title.attr("class", "group-" + index);
+        
+        // Set up link
         link.data("content", content);
         link.html(title);
         link.attr("class", "title");
-        //link.attr("data-index", index);
+        
+        // Citation link
         showCitations.data("target", index);
         showCitations.data("ids", ids);
         showCitations.attr("class", "citations");
         showCitations.html("Show Citations");
+        
+        // Similarity link
+        similarity.attr("class", "similarity");
+        similarity.html("Show Similar");
+        
+        // Factes link
+        facets.attr("class", "facets");
+        facets.html("Show Facets");
+        
+        // Append everything to result
         options.append(showCitations);
         options.attr("class", "options");
         result.append(link);
