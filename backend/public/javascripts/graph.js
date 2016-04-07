@@ -16,7 +16,7 @@ function testGraph() {
         });
 }
 
-function getTitle(url) {
+/*function getTitle(url) {
     var buff = url.split("/");
     var title = buff[buff.length -2];
     return title.replace(/-/g, " ");
@@ -24,8 +24,8 @@ function getTitle(url) {
     title = "";
     for(var i = 0; i < buff.length; i++) 
         title += buff[i][0];
-    return title;*/
-}
+    return title;
+}*/
 
 function getId(uri) {
     var buff = uri.split("/");
@@ -77,14 +77,14 @@ $(document).ready(function() {
     //buildGraph();
 });
 
-var width = $("#d3-graph").width();
+var width = $("#vis").width();
 var height = 800;
 var radius = 15;
 var linkDistance = 50;
 
 function buildGraph(selectedCase, nodes, count) {
     // selected case
-    width = $("#d3-graph").width();
+    // width = $("#vis").width();
     console.log(nodes.length);
     var data = [
         {
@@ -96,7 +96,8 @@ function buildGraph(selectedCase, nodes, count) {
             color: "#cca300",
             title: selectedCase.title,
             html: selectedCase.content,
-            citations: count
+            citations: count,
+            resource_uri: ""
         }
     ];
     var links = [];
@@ -117,10 +118,11 @@ function buildGraph(selectedCase, nodes, count) {
             x: 2 * 40 * ((i / count) + 1),
             y: i,
             radius: radius,
-            title: getTitle(nodes[i].absolute_url),
+            absolute_url: nodes[i].absolute_url,
             html: getContent(nodes[i]),
             opinions_cited: nodes[i].opinions_cited,
-            doc_id: getId(nodes[i].resource_uri),
+            resource_uri: nodes[i].resource_uri,
+            pagerank: nodes[i].pagerank,
             citations: 0,
             offset: 0,
         };
@@ -162,23 +164,25 @@ function buildGraph(selectedCase, nodes, count) {
     }
     console.log(data);
     console.log(links);
-    $("#d3-graph").html("");
+    $("#vis").html("");
     
     var ranks = [];
        
     for(var i = 0; i < data.length; i++) {
-        var field = "docId=";
-        $.ajax({
-            url: "http://52.36.127.109:9000/pagerank",
-            async: false,
-            type: "GET",
-            dataType: "text",
-            data: field + data[i].doc_id,
-            contentType: "text/plain",
-            success: function(response) {
-                ranks.push(parseFloat(response));
-            }
-        });
+        // var field = "docId=";
+        // $.ajax({
+        //     url: "http://52.36.127.109:9000/pagerank",
+        //     async: false,
+        //     type: "GET",
+        //     dataType: "text",
+        //     data: field + getId(data[i].resource_uri),
+        //     contentType: "text/plain",
+        //     success: function(response) {
+        //         ranks.push(parseFloat(response));
+        //     }
+        // });
+        ranks[i] = parseFloat(data[i].pagerank);
+        console.log(ranks[i]);
     }
     
     var log = d3.scale.log();
@@ -187,19 +191,7 @@ function buildGraph(selectedCase, nodes, count) {
         .domain([d3.min(ranks), d3.max(ranks)])
         .range([15, 30]);
     
-    for(var i = 0; i < data.length; i++) {
-        var r;
-        // linear scale
-        r  = linear(ranks[i]);        
-                
-        // sqrt scale
-        // r = radius * sqrt(ranks[i]) * 100;
-        
-        data[i].radius = isNaN(r) ? radius : r;
-        //console.log(data[i].radius);
-    }
-    
-    var container = d3.select("#d3-graph").append("svg")
+    var container = d3.select("#vis").append("svg")
         .attr({
             width: width,
             height: height
@@ -226,7 +218,8 @@ function buildGraph(selectedCase, nodes, count) {
     var node = nodeGroup.append("circle")
         .attr({
             r: function(d, i) {
-                return d.radius;
+                var r  = linear(d.pagerank);
+                return isNaN(r) ? radius : r;
             },
             fill: function(d) {
                 if(d.group != null) {
@@ -236,6 +229,9 @@ function buildGraph(selectedCase, nodes, count) {
                         return "#3366ff";
                 }
                 return "black";
+            },
+            class: function(d, i) {
+                return "group-" + i;
             }
         });
         //.call(force.drag);
@@ -255,10 +251,12 @@ function buildGraph(selectedCase, nodes, count) {
             console.log(d.content);
         })
         .on("mouseover", function(d, i) {
-            d3.select(this).select("text").attr("visibility", "");
+            //d3.select(this).select("text").attr("visibility", "");
+            d3.select(this).select("circle").attr("fill", "red");
         })
         .on("mouseout", function(d, i) {
-            d3.select(this).select("text").attr("visibility", "hidden");
+            //d3.select(this).select("text").attr("visibility", "hidden");
+            d3.select(this).select("circle").attr("fill", "black");
         });
     
     force.on("tick", function() {
@@ -299,104 +297,3 @@ function buildGraph(selectedCase, nodes, count) {
     });
     return data;
 }
-
-    
-
-/*$(document).ready(function() {
-    var nodes = new vis.DataSet([
-        {
-            id: 1,
-            label: "Node 1",
-            color: "blue",
-            x: 300,
-            y: 150
-            //level: 0
-        },
-        {
-            id: 2,
-            label: "Node 2"
-        },
-        {
-            id: 3,
-            label: "Node 3",
-        },
-        {
-            id: 4,
-            label: "Node 4"
-        },
-        {
-            id: 5,
-            label: "Node 5"
-        },
-        {
-            id: 6,
-            label: "Node 6"
-        },
-        {
-            id: 7,
-            label: "Node 7"
-        },
-    ]);
-
-    var edges = new vis.DataSet([
-        {
-            from: 1, 
-            to: 2
-        },
-        {
-            from: 1,
-            to: 3
-        },
-        {
-            from: 1,
-            to: 4
-        },
-        {
-            from: 1,
-            to: 5
-        },
-        {
-            from: 1,
-            to: 6
-        },
-        {
-            from: 1,
-            to: 7
-        }
-    ])
-
-    var container = document.getElementById("graph");
-
-    var data = {
-        nodes: nodes,
-        edges: edges
-    };
-
-    var options = {
-        height: "1200px",
-        width: "800px",
-        nodes: {
-            physics: true,
-            fixed: true,
-            color: "red",
-            shape: "circle",
-            //level: 2
-        },
-        layout: {
-            randomSeed: 90760
-            //improvedLayout: true
-            /*hierarchical: {
-                enabled: true,
-                direction: "LR"
-            }
-        },
-        interaction: {
-            dragView: false,
-            zoomView: false
-        }
-    };
-
-    var graph = new vis.Network(container, data, options);
-    graph.fit();
-    console.log(graph.getSeed());
-});*/

@@ -16,7 +16,7 @@ $(document).ready(function() {
     });
 });*/
 
-var width = 1024;
+var width = $("#vis").width();
 var height = 1024;
 var radius = 30;
 var linkDistance = 100;
@@ -63,18 +63,19 @@ var scale = d3.scale.quantize()
 
 var ticks = [];
 
-function buildSimVis(nodes) {
+function buildSimVis(selectedCase, nodes) {
+    console.log(nodes);
     var data = [{
         fixed: true,
         x: width/2,
         y: height/2,
-        radius: 10 + radius * Math.random()
+        radius: radius
     }];
     var links = [];
     for(var i = 0; i < nodes.length; i++) {
         var node = {
-            radius: 10 + radius * Math.random(),
-            score: Math.random()
+            radius: radius,
+            score: nodes[i].score
         };
         var link = {
             source: 0,
@@ -92,7 +93,7 @@ function buildSimVis(nodes) {
     console.log(links);
     console.log(ticks);
         
-     var container = d3.select(".results").append("svg")
+     var container = d3.select("#vis").append("svg")
         .attr({
             width: width,
             height: height
@@ -116,7 +117,7 @@ function buildSimVis(nodes) {
         .data(ticks).enter().append("circle")
             .attr({
                 class: function(d) {
-                    return "tick group-" + scale(d.score);
+                    return "tick-group-" + scale(d.score);
                 },
                 cx: width/2,
                 cy: height/2,
@@ -129,8 +130,8 @@ function buildSimVis(nodes) {
 
     var node = nodeGroup.append("circle")
         .attr({
-            class: function(d) {
-                return "node group-" + scale(d.score);
+            class: function(d, i) {
+                return "node group-" + i;
             },
             r: function(d) {
                 return d.radius;
@@ -181,12 +182,12 @@ function buildSimVis(nodes) {
     });
     
     node.on("mouseover", function(d) {
-        var group = ".group-" + scale(d.score);
+        var group = ".tick-group-" + scale(d.score);
         $(group).css("stroke", "red");
     });
     
     node.on("mouseout", function(d) {
-        var group = ".group-" + scale(d.score);
+        var group = ".tick-group-" + scale(d.score);
         $(group).css("stroke", "black");
-    })
+    });
 }

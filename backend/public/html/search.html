@@ -114,7 +114,7 @@
         z-index:2;
       }
     #results-wrapper {
-        width: 40%;
+        width: 35%;
         float: left;
         position: relative;
     }
@@ -123,15 +123,16 @@
         margin-left: 30px;
     }
     
-    #d3-graph {
-        width: 60%;
+    #vis {
+        width: 65%;
         float: left;
         position: relative;
     }
     
     #results > div {
-        margin-left: 15%;
-        margin-top: 20px;
+        margin: 0 10%;
+        padding: 20px 0;
+        overflow: hidden;
     }
    
     .title {
@@ -146,6 +147,10 @@
         margin-top: 10px;
     }
     
+    .options a {
+        margin-right: 10px;
+    }
+    
     .result ul {
         margin-top: 10px;
     }
@@ -155,7 +160,76 @@
         margin-top: 10px;
         margin-left: 40px;
     }
-   
+    
+    #case-header {
+        position: relative;
+        display: none;
+        margin-bottom: 20px;
+    }
+    
+    #header-title {
+        text-align: center;
+        text-transform: uppercase;
+        padding: 10px;
+    }
+    
+    #header-nav {
+        overflow: hidden;
+        background-color: #666666;
+        color: white;
+        /*border: 1px solid black;*/
+    }
+    
+    #nav-left {
+        width: 30%;
+        float: left;
+    }
+    
+    #nav-right {
+        width: 70%;
+        float: right;
+    }
+    
+    .header-button {
+        float: left;
+        width: 50%;
+        text-align: center;
+        border-left: 1px solid black;
+        margin: 0;
+        padding: 10px;
+    }
+    
+    .button-wrapper:nth-child(1) {
+        border-left: 0;
+    }
+    
+    a, .header-button {
+        cursor: pointer;
+    }
+    
+    .header-button:hover {
+        background-color: gray;
+    }
+    
+    #view-doc {
+        width: 90%;
+    }
+    
+    .back {
+        width: 10%;
+    }
+    
+    .selected {
+        background-color: whitesmoke !important;
+        border: 1px solid #666666;
+        color: black;
+    }
+    
+    .options > ul li {
+        float: left;
+        width: 50%;
+    }
+
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8" defer></script>
@@ -194,7 +268,30 @@
         return title.replace(/-/g, " ");
     }
     
+    function getId(uri) {
+        var buff = uri.split("/");
+        return buff[buff.length - 2];
+    }
+    
     function resultHandler() {
+        //saveState();
+        var title = $(this).find("h3").text();
+        if($("#case-header").css("display") == "none") {
+            $("#case-header").css({
+                top: $("#nav-container").css("height"),
+                display: "block"
+            });
+        }
+        $("#header-title").html(title);
+        //console.log($(this).data("citations"));
+        // $("#results").toggleClass("loading");
+        $("#citations").data("ids", $(this).data("citations"));
+        $("#similarity").data("id", $(this).data("id"));
+        $("#view-doc").data("content", $(this).data("content"));
+        $("#citations").click();
+    }
+    
+    function viewHandler() {
         var modalBackground = "<div id=\"modal-background\"></div>";
         var containerHTML = "<div id=\"modal-container\"></div>";
         $("body").prepend(modalBackground);
@@ -208,6 +305,10 @@
     }
     
     function citationHandler() {
+        if($(this).hasClass("selected"))
+            return;
+        $(this).addClass("selected");
+        $("#similarity").removeClass("selected");
         saveState();
         var data = "";
         var selectedCase = {
@@ -216,7 +317,7 @@
         };
         //var container = event.data.citations[$(this).data("target")];
         var citations = $(this).data("ids");
-        console.log(citations);
+        //console.log(citations);
         var nodeMap = [];
         for(var i = 0; i < citations.length; i++) {
             data += citations[i];
@@ -228,6 +329,7 @@
             return;
         }
         data = cleanCSL(data);
+        console.log(data);
         //var url = "/getDocuments";
         var url = "http://52.36.127.109:9000/getDocuments";
         $.ajax({
@@ -282,6 +384,50 @@
         });
     }
     
+    function similarityHandler() {
+        if($(this).hasClass("selected"))
+            return;
+        $(this).addClass("selected");
+        $("#citations").removeClass("selected");
+        var url = "http://52.36.127.109:9000/similar";
+        var field = "courtId=" + $(this).data("id");
+        saveState();
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "text",
+            data: field,
+            contentType: "text/plain",
+            success: function(response) {
+                var simScores = JSON.parse(response);
+                var data = "";
+                $("#vis").html("");
+                for(var i = 0; i < simScores.length; i++) {
+                    data += simScores[i].courtid[0];
+                    if(i < simScores.length - 1)
+                        data += ",";
+                }
+                console.log(data);
+                $.ajax({
+                    url: "http://52.36.127.109:9000/getDocuments",
+                    type: "POST",
+                    dataType: "text",
+                    data: data,
+                    contentType: "text/plain",
+                    success: function(response) {
+                        var obj = JSON.parse(response);
+                        var docs = obj.documents;
+                        for(var i = 0; i < docs.length; i++) 
+                            docs[i].score = simScores[i].score;
+                        console.log(obj.documents);
+                        buildSimVis("", obj.documents);
+                        updateResults(docs);
+                    }
+                });
+            }
+        });
+    }
+    
     function backHandler() {
         if(states.length == 0) {
             console.log("empty");
@@ -295,14 +441,31 @@
             var result = $(results[i]);
             result.find(".title").data("content", state.data[i].title);
             result.find(".citations").data("ids", state.data[i].citation);
+            result.find(".similarity").data("id", state.data[i].similarity);
         }
         attachHandlers();
         $(".back").click(backHandler);
     }
-    
+        
     function attachHandlers() {
         $(".title").click(resultHandler);
-        $(".citations").click(citationHandler);
+        $(".title").mouseover(function() {
+            console.log("enter");
+            var target = "." + $(this).attr("class").split(" ")[1];
+            //console.log($("circle" + target).attr("class"));
+            $("circle" + target).attr({
+                fill: "red"
+            });
+        });
+        
+        $(".title").mouseleave(function() {
+            console.log("leave");
+            var target = "." + $(this).attr("class").split(" ")[1];
+            $("circle" + target).attr({
+                fill: "blue"
+            });
+            
+        });
     }
     
     function saveState() {
@@ -311,7 +474,8 @@
         for(var i = 0; i < results.length; i++) {
             data.push({
                 title: $(results[i]).find(".title").data("content"),
-                citation: $(results[i]).find(".citations").data("ids")
+                citation: $(results[i]).find(".citations").data("ids"),
+                similarity: $(results[i]).find(".similarity").data("id")
             });
         }
         states.push({
@@ -320,7 +484,12 @@
         });
     }
     
-    function buildResult(caseTitle, content, ids, index) {
+    function buildResult(doc, index) {
+        var ids = cleanCitations(doc.opinions_cited);
+        var content = doc.html;
+        var caseTitle = getTitle(doc.absolute_url);
+        var id = getId(doc.resource_uri);
+        
         var result = $("<div>");
         var title = $("<h3>");
         var link = $("<a>");
@@ -328,6 +497,10 @@
         var similarity = $("<a>");
         var facets = $("<a>");
         var options = $("<div>");
+        var snippet = $("<div>");
+        var attrs = $("<ul>");
+        
+        var samples = ["Judge", "Data", "Pettitioner", "Etc."]
         
         // Set up title
         title.html(caseTitle);
@@ -335,25 +508,34 @@
         
         // Set up link
         link.data("content", content);
+        link.data("citations", ids);
+        link.data("id", id);
         link.html(title);
-        link.attr("class", "title");
+        link.attr("class", "title group-" + index);
+
         
         // Citation link
         showCitations.data("target", index);
-        showCitations.data("ids", ids);
+        //showCitations.data("ids", ids);
         showCitations.attr("class", "citations");
         showCitations.html("Show Citations");
         
         // Similarity link
+        similarity.data("id", id);
         similarity.attr("class", "similarity");
         similarity.html("Show Similar");
         
-        // Factes link
-        facets.attr("class", "facets");
-        facets.html("Show Facets");
+        // Snippet 
+        snippet.html("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed dignissim libero. Phasellus sed enim ac eros accumsan vestibulum eu quis lacus. Proin condimentum rutrum neque, et molestie orci aliquam.");
+        
+        // attrs
+        samples.forEach(function(e, i, a) {
+            attrs.append($("<li>").html(e));
+        });
         
         // Append everything to result
-        options.append(showCitations);
+        //options.append(showCitations, similarity);
+        options.append(snippet, attrs);
         options.attr("class", "options");
         result.append(link);
         result.append(options);
@@ -364,24 +546,29 @@
     function updateResults(docs) {
         //console.log(selectedCase.title);
         $("#results").html("");
-        var header = $("<h2>");
+        //var header = $("<h2>");
         var data = [];
         //console.log(docs[0]);
-        header.html("Citations for: " + docs[0].title);
-        $("#results").append(header);
+        //header.html("Citations for: " + docs[0].title);
+        //$("#results").append(header);
         var i = 1;
         console.log(docs.length);
         var citations = [];
-        while(true) {
-            if(docs[i].offset == docs.length - 1)
-                break;
-            var result = buildResult(docs[i].title, docs[i].html, cleanCitations(docs[i].opinions_cited), i);
-            var list = showChildren(docs[i], docs);
-            //citations[i] = cleanCitations(docs[i].opinions_cited);
-            result.append(list);
-            $("#results").append(result);
-            i++;
-        }
+        // docs.forEach(function(e, i, a) {
+        //     $("#results").append(buildResult(e, i)); 
+        // });
+        for(var i = 1; i < docs.length; i++)
+            $("#results").append(buildResult(docs[i], i));
+        // while(true) {
+        //     if(docs[i].offset == docs.length - 1)
+        //         break;
+        //     var result = buildResult(docs[i], i);
+        //     //var list = showChildren(docs[i], docs);
+        //     //citations[i] = cleanCitations(docs[i].opinions_cited);
+        //     //result.append(list);
+        //     $("#results").append(result);
+        //     i++;
+        // }
         attachHandlers();
         console.log(states);
     }
@@ -393,7 +580,7 @@
         var count = 0;
         while(count < currentDoc.citations) {
             var li = $("<li>");
-            var result = buildResult(docs[i].title, docs[i].html, cleanCitations(docs[i].opinions_cited), i);
+            var result = buildResult(docs[i], i);
             li.append(result);
             list.append(li);
             count++;
@@ -406,6 +593,10 @@
   	$(document).ready(function(){
         
         $(".back").click(backHandler);
+        $("#citations").click(citationHandler);
+        $("#similarity").click(similarityHandler);
+        $("#view-doc").click(viewHandler);
+        
         
         $("#search").submit(function(e){
             var url = "http://52.36.127.109:9000/search"
@@ -440,19 +631,20 @@
                             lineHeight: $("#nav-container").css("height")
                         });
                         $("#results-wrapper").css("top", $("#nav-container").css("height"));
-                        $("#d3-graph").css("top", $("#nav-container").css("height"));
+                        $("#vis").css("top", $("#nav-container").css("height"));
                         $(".back").css("display", "inline-block");
                     }
                     for(var i = 0; i < docs.length; i++) {
                         var ids = cleanCitations(docs[i].opinions_cited);
                         var content = docs[i].html;
                         var caseTitle = getTitle(docs[i].absolute_url);
-                        var result = buildResult(caseTitle, content, ids, i);
+                        var result = buildResult(docs[i], i);
                         $("#results").append(result);
                     }
                     // add event handlers
                     attachHandlers();
-                    // push current state onto stack
+                    $("#case-header").css("display", "none");
+                    $("#vis").html("");
                     /* Start old results
                     var modalBackground = "<div id=\"modal-background\"></div>";
                         var containerHTML = "<div id=\"modal-container\"></div>";
@@ -515,12 +707,29 @@
      </button>
     </form>
   </div>
+  <div id="case-header">
+      <div id="title-wrapper">
+          <!--<div id="back-wrapper">
+            <a class="back">Back</a>
+           </div>-->
+          <h1 id="header-title">Brown v. Board</h1>
+      </div>
+      <div id="header-nav">
+          <div id="nav-left">
+            <div class="header-button glyphicon glyphicon-chevron-left back"></div>
+            <h4 class="header-button" id="view-doc">View</h4>
+          </div>
+          <div id="nav-right">
+            <h4 class="header-button" id="citations">Citations</h4>
+            <h4 class="header-button" id="similarity">Similarity</h4>
+          </div>
+      </div>
+  </div>
   <div id="results-wrapper">
-    <a class="back">Back</a>
     <div id="results">
   </div>
   </div>
-  <div id="d3-graph"><div>
+  <div id="vis"><div>
   <div id="document"></div>
 </body>
 </html>
