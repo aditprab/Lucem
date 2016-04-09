@@ -274,7 +274,7 @@
     }
     
     function resultHandler() {
-        //saveState();
+        saveState();
         var title = $(this).find("h3").text();
         if($("#case-header").css("display") == "none") {
             $("#case-header").css({
@@ -307,9 +307,10 @@
     function citationHandler() {
         if($(this).hasClass("selected"))
             return;
+        if($("#similarity").hasClass("selected"))
+            saveState();
         $(this).addClass("selected");
         $("#similarity").removeClass("selected");
-        saveState();
         var data = "";
         var selectedCase = {
             title: $(this).parent().siblings(".title").find("h3").text(),
@@ -377,7 +378,7 @@
                         console.log(initialCount);
                         console.log(nodeMap.length);
                         var nodes = buildGraph(selectedCase, nodeMap, initialCount);
-                        updateResults(nodes);
+                        updateResults(nodeMap);
                     }
                 });
             }
@@ -387,11 +388,11 @@
     function similarityHandler() {
         if($(this).hasClass("selected"))
             return;
+        saveState();
         $(this).addClass("selected");
         $("#citations").removeClass("selected");
         var url = "http://52.36.127.109:9000/similar";
         var field = "courtId=" + $(this).data("id");
-        saveState();
         $.ajax({
             url: url,
             type: "GET",
@@ -440,11 +441,17 @@
         for(var i = 0; i < results.length; i++) {
             var result = $(results[i]);
             result.find(".title").data("content", state.data[i].title);
-            result.find(".citations").data("ids", state.data[i].citation);
-            result.find(".similarity").data("id", state.data[i].similarity);
+            result.find(".title").data("citations", state.data[i].citation);
+            result.find(".title").data("id", state.data[i].similarity);
         }
+        $("#citations").data("ids", state.currentCase.citations);
+        $("#similarity").data("id", state.currentCase.similarity);
+        $("#view-doc").data("content", state.currentCase.content);
         attachHandlers();
         $(".back").click(backHandler);
+        $("#view-doc").click(viewHandler);
+        $("#citations").click(citationHandler);
+        $("#similarity").click(similarityHandler);
     }
         
     function attachHandlers() {
@@ -472,14 +479,20 @@
         var data = [];
         var results = $("body").find(".result");
         for(var i = 0; i < results.length; i++) {
+            var title = $(results[i]).find(".title");
             data.push({
-                title: $(results[i]).find(".title").data("content"),
-                citation: $(results[i]).find(".citations").data("ids"),
-                similarity: $(results[i]).find(".similarity").data("id")
+                title: title.data("content"),
+                citation: title.data("citations"),
+                similarity: title.data("id")
             });
         }
         states.push({
             content: $("body").html(),
+            currentCase: {
+                content: $("#view-doc").data("content"),
+                citations: $("#citations").data("ids"),
+                similarity: $("#similarity").data("id")
+            },
             data: data
         });
     }
@@ -511,7 +524,7 @@
         link.data("citations", ids);
         link.data("id", id);
         link.html(title);
-        link.attr("class", "title group-" + index);
+        link.attr("class", "title group-" + (index + 1));
 
         
         // Citation link
@@ -557,7 +570,7 @@
         // docs.forEach(function(e, i, a) {
         //     $("#results").append(buildResult(e, i)); 
         // });
-        for(var i = 1; i < docs.length; i++)
+        for(var i = 0; i < docs.length; i++)
             $("#results").append(buildResult(docs[i], i));
         // while(true) {
         //     if(docs[i].offset == docs.length - 1)

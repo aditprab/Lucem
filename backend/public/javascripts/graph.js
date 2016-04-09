@@ -94,7 +94,7 @@ function buildGraph(selectedCase, nodes, count) {
             y: height/2,
             group: 0,
             color: "#cca300",
-            title: selectedCase.title,
+            absolute_url: selectedCase.absolute_url,
             html: selectedCase.content,
             citations: count,
             resource_uri: ""
