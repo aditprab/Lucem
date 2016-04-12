@@ -32,6 +32,8 @@ POST    /getDocuments               controllers.Application.getDocuments()
 GET     /graph-js                   controllers.Assets.at(path="/public", file="javascripts/graph.js")
 GET     /similar-js                 controllers.Assets.at(path="/public", file="javascripts/similar.js")
 GET     /facet-js                   controllers.Assets.at(path="/public", file="javascripts/facet.js")
+GET     /search-js                  controllers.Assets.at(path="/public", file="javascripts/search.js")
+GET     /search-css                 controllers.Assets.at(path="/public", file="stylesheets/search.css")
 
 POST    /testGraph                  controllers.Application.testGraph()
 

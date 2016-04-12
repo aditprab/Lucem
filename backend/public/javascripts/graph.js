@@ -131,13 +131,13 @@ function buildGraph(selectedCase, nodes, count) {
             continue;
         }*/
         var casesSeen = 0;
-        var maxNodes = 5;
-        var loopCondition;
-        if(maxNodes < nodes[i].opinions_cited.length)
-            loopCondition = maxNodes;
-        else
-            loopCondition = nodes[i].opinions_cited.length;
-        for(var j = 0, k = 0; j < loopCondition; j++) {
+        // var maxNodes = 5;
+        // var loopCondition;
+        // if(maxNodes < nodes[i].opinions_cited.length)
+        //     loopCondition = maxNodes;
+        // else
+        //     loopCondition = nodes[i].opinions_cited.length;
+        for(var j = 0, k = 0; j < nodes[i].opinions_cited.length; j++) {
             if(pad + k < nodes.length) {
                 //console.log(nodes[i].opinions_cited[j]);
                 if(nodes[i].opinions_cited[j] == nodes[pad + k].resource_uri) {
@@ -238,12 +238,16 @@ function buildGraph(selectedCase, nodes, count) {
 
     var label = nodeGroup.append("text")
         .text(function(d, i) {
-            return d.title + " " + i;
+            return i;
         })
-        .attr("transform", function(d) {
-            return "translate(0," + -d.radius + ")"
-        })
-        .attr("visibility", "hidden");
+        // .attr("transform", function(d) {
+        //     return "translate(0," + -d.radius + ")"
+        // })
+        .attr({
+            visibility: "",
+            fill: "white",
+            "text-anchor": "middle"
+        });
     
     nodeGroup
         .on("click", function(d, i) {

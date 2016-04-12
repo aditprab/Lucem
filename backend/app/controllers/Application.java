@@ -86,10 +86,10 @@ public class Application extends Controller {
 
     public static Result findCitations() {
         Query query = new Query();
-        
-	String result = query.findCitations(1724);
+	    String result = query.findCitations(1724);
     	return ok(result);
     }
+    
      public static Result getDocuments() {
           String[] stringIds;
           Vector<Integer> ids = new Vector<Integer>();
