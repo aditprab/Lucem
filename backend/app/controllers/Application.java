@@ -98,6 +98,7 @@ public class Application extends Controller {
 	return ok();
     }
     
+
      public static Result getDocuments() {
           String[] stringIds;
           Vector<Integer> ids = new Vector<Integer>();
