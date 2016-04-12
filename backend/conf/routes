@@ -20,7 +20,9 @@ GET	/pagerank		    controllers.Application.getPageRank(docId:String)
 
 POST    /signup			    controllers.Application.addUser()
 
-GET	/caseInfo		    controllers.Application.caseInfo(docId: String)
+GET	/caseInfo		    controllers.Application.caseInfo(caseCite: String)
+
+GET	/facetSearch		    controllers.Application.facet(caseCite:String, facetRequest: String)
 
 GET     /results                    controllers.Application.results()
 

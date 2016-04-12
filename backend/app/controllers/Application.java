@@ -74,6 +74,7 @@ public class Application extends Controller {
 	
 	PageRank pageRank = new PageRank();
 	String rank = pageRank.getPageRank(docId);
+	
 	if(rank == null){
 		//Not a valid docId.
 		return badRequest("invalid doc id");
@@ -88,6 +89,13 @@ public class Application extends Controller {
         Query query = new Query();
 	    String result = query.findCitations(1724);
     	return ok(result);
+    }
+	
+    public static Result facet(String caseCite, String facetRequest){
+	//facetRequest is a comma separated list of fields.
+	//Mapping: 1- petitioner, 2- chief, 3- respondent, 4- jurisdiction, 5- issueArea, 6- issue, 7- authorityDecision, 8- lawType
+	//9- lawSupp, 10- decisionType
+	return ok();
     }
     
      public static Result getDocuments() {
@@ -144,10 +152,18 @@ public class Application extends Controller {
 	return ok(ids);	
     }
     
-    public static Result caseInfo(String docId){
-	
-	CaseInfoUtil caseInfo = new CaseInfoUtil();
-	return ok();
+    public static Result caseInfo(String caseCite) throws Exception{
+	return badRequest("deprecated route");
+	/*
+	System.out.println("Getting info for caseCite: " + caseCite);	
+	CaseInfo caseInfo = new CaseInfo();
+	String info = caseInfo.getCaseInfo(caseCite);	
+	if(info == null){
+	   return badRequest("no entry for this caseCite");	
+	}else{
+	   return ok(info);
+	}
+	*/
     }
 
     public static Result addUser() {
