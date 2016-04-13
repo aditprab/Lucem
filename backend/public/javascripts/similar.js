@@ -75,7 +75,14 @@ function buildSimVis(selectedCase, nodes) {
     for(var i = 0; i < nodes.length; i++) {
         var node = {
             radius: radius,
-            score: nodes[i].score
+            absolute_url: nodes[i].absolute_url,
+            score: nodes[i].score,
+            date: nodes[i].date,
+            issue: nodes[i].issue,
+            respondant: nodes[i].respondant,
+            chiefJustice: nodes[i].chiefJustice,
+            issueArea: nodes[i].issueArea,
+            petitioner: nodes[i].petitioner
         };
         var link = {
             source: 0,
@@ -172,12 +179,21 @@ function buildSimVis(selectedCase, nodes) {
     node.on("click", function(d, i) {
         console.log(scale(d.score));
         var menu = $("#menu");
+        var attrs = $("#menu").find("ul");
+        menu.find("h3").html(d.absolute_url);
+        attrs.html("");
+        attrs.append($("<li>").html("Date: " + d.date));
+        attrs.append($("<li>").html("Issue: " + d.issue));
+        attrs.append($("<li>").html("Respondent: " + d.respondent));
+        attrs.append($("<li>").html("Chief Justice: " + d.chiefJustice));
+        attrs.append($("<li>").html("Issue Area: " + d.issueArea));
+        attrs.append($("<li>").html("Petitioner: " + d.petitioner));
         var width = menu.width();
         var height = menu.height();
         $("#menu").css({
             display: "block",
             top: d.y - (height + d.radius),
-            left: d.x + width/2
+            left: d.x - width/2
         });
     });
     

@@ -5,10 +5,10 @@
   <link href="/search-css" rel="stylesheet" type="text/css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8" defer></script>
+  <script src="/search-js" defer></script>
   <script src="/graph-js" defer></script>
   <script src="/similar-js" defer></script>
   <script src="/facet-js" defer></script>
-  <script src="/search-js" defer></script>
   
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
@@ -28,10 +28,10 @@
     </div>
   </div>
   <div id="form-container">
-    <form id="search">
+    <form onsubmit="return false" id="search">
      <input type="text" id="query" name="query">
      </input>
-     <button class="uppercase" type="submit" value="Search">
+     <button class="uppercase" type="submit" id="search-button" value="Search">
        Search
      </button>
     </form>
@@ -56,12 +56,26 @@
   </div>
   <div id="results-wrapper">
     <div id="pagination">
-        <span class="glyphicon glyphicon-chevron-left prev-page"></span>
-        <span class="glyphicon glyphicon-chevron-right next-page"></span>
+        <span class="prev-button">
+            <span class="glyphicon glyphicon-chevron-left prev-page"></span>
+            Previous
+        </span>
+        <span class="next-button">
+            Next
+            <span class="glyphicon glyphicon-chevron-right next-page"></span>
+        </span>
     </div>
     <div id="results"></div>
   </div>
-  <div id="vis"><div>
+  <div id="vis">
+      <div id="menu">
+        <span class="glyphicon glyphicon-remove"></span>
+        <a class="title">
+            <h3></h3>
+        </a>
+        <ul class="info"></ul>
+    </div>
+  </div>
   <div id="document"></div>
 </body>
 </html>

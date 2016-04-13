@@ -85,7 +85,7 @@ var linkDistance = 50;
 function buildGraph(selectedCase, nodes, count) {
     // selected case
     // width = $("#vis").width();
-    console.log(nodes.length);
+    //console.log(nodes.length);
     var data = [
         {
             fixed: false,
@@ -107,7 +107,7 @@ function buildGraph(selectedCase, nodes, count) {
             source: 0,
             target: i + 1
         };
-        console.log(link);
+        //console.log(link);
         links.push(link);
     }
     // add nodes to data, add remaining links
@@ -123,8 +123,14 @@ function buildGraph(selectedCase, nodes, count) {
             opinions_cited: nodes[i].opinions_cited,
             resource_uri: nodes[i].resource_uri,
             pagerank: nodes[i].pagerank,
+            date: nodes[i].date,
+            issue: nodes[i].issue,
+            respondant: nodes[i].respondant,
+            chiefJustice: nodes[i].chiefJustice,
+            issueArea: nodes[i].issueArea,
+            petitioner: nodes[i].petitioner,
             citations: 0,
-            offset: 0,
+            offset: 0
         };
         /*if(nodes[i].opinions_cited.length == 0) {
             console.log("no citations");
@@ -145,7 +151,7 @@ function buildGraph(selectedCase, nodes, count) {
                         source: i+1,
                         target: pad + k + 1
                     };
-                    console.log(link);
+                    //console.log(link);
                     links.push(link);
                     casesSeen++;
                     k++;
@@ -162,9 +168,9 @@ function buildGraph(selectedCase, nodes, count) {
         //console.log(pad + count);
         //console.log(node);
     }
-    console.log(data);
-    console.log(links);
-    $("#vis").html("");
+    //console.log(data);
+    //console.log(links);
+    //$("#vis").html("");
     
     var ranks = [];
        
@@ -182,7 +188,7 @@ function buildGraph(selectedCase, nodes, count) {
         //     }
         // });
         ranks[i] = parseFloat(data[i].pagerank);
-        console.log(ranks[i]);
+        //console.log(ranks[i]);
     }
     
     var log = d3.scale.log();
@@ -231,7 +237,7 @@ function buildGraph(selectedCase, nodes, count) {
                 return "black";
             },
             class: function(d, i) {
-                return "group-" + i;
+                return "node group-" + i;
             }
         });
         //.call(force.drag);
@@ -252,7 +258,7 @@ function buildGraph(selectedCase, nodes, count) {
     nodeGroup
         .on("click", function(d, i) {
             $("#document").html(d.content);
-            console.log(d.content);
+            //console.log(d.content);
         })
         .on("mouseover", function(d, i) {
             //d3.select(this).select("text").attr("visibility", "");
@@ -262,6 +268,29 @@ function buildGraph(selectedCase, nodes, count) {
             //d3.select(this).select("text").attr("visibility", "hidden");
             d3.select(this).select("circle").attr("fill", "black");
         });
+    
+    
+        
+    node.on("click", function(d, i) {
+        console.log(scale(d.score));
+        var menu = $("#menu");
+        var attrs = $("#menu").find("ul");
+        menu.find("h3").html(d.absolute_url);
+        attrs.html("");
+        attrs.append($("<li>").html("Date: " + d.date));
+        attrs.append($("<li>").html("Issue: " + d.issue));
+        attrs.append($("<li>").html("Respondent: " + d.respondent));
+        attrs.append($("<li>").html("Chief Justice: " + d.chiefJustice));
+        attrs.append($("<li>").html("Issue Area: " + d.issueArea));
+        attrs.append($("<li>").html("Petitioner: " + d.petitioner));
+        var width = menu.width();
+        var height = menu.height();
+        $("#menu").css({
+            display: "block",
+            top: d.y - (height + d.radius),
+            left: d.x - width/2
+        });
+    });
     
     force.on("tick", function() {
         // Code snippet from https://bl.ocks.org/mbostock/3231298

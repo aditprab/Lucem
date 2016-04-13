@@ -47,7 +47,6 @@ function resultHandler() {
     $("#citations").data("page", 0);
     $("#similarity").data("id", $(this).data("id"));
     $("#view-doc").data("content", $(this).data("content"));
-    $("#pagination").css("display", "block");
     $("#citations").click();
 }
 
@@ -78,12 +77,20 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                 // console.log(response);
                 var initialCount = documents.length;
                 updateResults(documents);
+                $("#pagination").css("display", "block");
                 documents = documents.concat(obj.documents);
                 console.log(documents);
                 // console.log(nodeMap);
                 // console.log(initialCount);
                 // console.log(nodeMap.length);
+                $("#vis").find("svg").remove();
                 var nodes = buildGraph(selectedCase, documents, initialCount);
+            },
+            error: function(error) {
+                updateResults(documents);
+                $("#pagination").css("display", "block");
+                $("#vis").find("svg").remove();
+                var nodes = buildGraph(selectedCase, documents, documents.length);
             }
         });
     }
@@ -103,6 +110,7 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                     if(i > 0)
                         data += ",";
                     var citations = cleanCitations(obj.documents[i].opinions_cited);
+                    console.log(citations.length);
                     var maxNodes = 5;
                     var count = 0;
                     while(count < maxResults) {
@@ -116,6 +124,7 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                         count++;
                     }
                 }
+                data = cleanCSL(data);
                 console.log(data);
                 getDocuments(data, documents, currentDepth + 1, targetDepth, selectedCase);
             }
@@ -126,10 +135,11 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
 function citationHandler() {
     // if($(this).hasClass("selected"))
     //     return;
-    if($("#similarity").hasClass("selected"))
-        saveState();
+    // if($("#similarity").hasClass("selected"))
+    //     saveState();
     $(this).addClass("selected");
     $("#similarity").removeClass("selected");
+    $("#menu").css("display", "none");
     var data = "";
     var selectedCase = {
         absolute_url: $(this).parent().siblings(".title").find("h3").text(),
@@ -138,8 +148,16 @@ function citationHandler() {
     //var container = event.data.citations[$(this).data("target")];
     var citations = $(this).data("ids");
     var index = $(this).data("page") * maxResults;
-    console.log($(this).data("page"));
     var count = 0;
+    
+    // hide buttons if on first or last page
+    $("#pagination").find(".prev-button").css("display", "inline");
+    $("#pagination").find(".next-button").css("display", "inline");
+    if(index == 0)
+        $("#pagination").find(".prev-button").css("display", "none");
+    if(index + maxResults >= citations.length)
+        $("#pagination").find(".next-button").css("display", "none");
+    
     while(count < maxResults && (index + count) < citations.length) {
         data += citations[index + count];
         if(count < maxResults - 1) 
@@ -147,7 +165,7 @@ function citationHandler() {
         count++;
     }
     if(citations.length == 0) {
-        console.log("empty");
+        updateResults("No citations for this case");
         return;
     }
     data = cleanCSL(data);
@@ -159,11 +177,15 @@ function citationHandler() {
 function similarityHandler() {
     if($(this).hasClass("selected"))
         return;
-    saveState();
+    //saveState();
     $(this).addClass("selected");
     $("#citations").removeClass("selected");
+    $("#citations").data("page", 0);
+    $("#pagination").css("display", "none");
+    $("#menu").css("display", "none");
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
+    console.log(field);
     $.ajax({
         url: url,
         type: "GET",
@@ -173,13 +195,17 @@ function similarityHandler() {
         success: function(response) {
             var simScores = JSON.parse(response);
             var data = "";
-            $("#vis").html("");
+            $("#vis").find("svg").remove();
             for(var i = 0; i < simScores.length; i++) {
                 data += simScores[i].courtid[0];
                 if(i < simScores.length - 1)
                     data += ",";
             }
             console.log(data);
+            if(data == "") {
+                updateResults("No similar cases");
+                return;
+            }
             $.ajax({
                 url: "http://52.36.127.109:9000/getDocuments",
                 type: "POST",
@@ -203,7 +229,7 @@ function similarityHandler() {
 function pageHandler() {
     var citations = $("#citations");
     var target;
-    if($(this).hasClass("prev-page"))
+    if($(this).hasClass("prev-button"))
         target = citations.data("page") - 1;
     else 
         target = citations.data("page") + 1;
@@ -228,25 +254,81 @@ function backHandler() {
         return;
     }
     var state = states.pop();
-    $("body").html(state.content);
+    //$("body").html(state.content);
+    $("body").remove();
+    $("html").append(state);
     console.log(state);
-    var results = $("body").find(".result");
-    for(var i = 0; i < results.length; i++) {
-        var result = $(results[i]);
-        result.find(".title").data("content", state.data[i].title);
-        result.find(".title").data("citations", state.data[i].citation);
-        result.find(".title").data("id", state.data[i].similarity);
-    }
-    $("#citations").data("ids", state.currentCase.citations);
-    $("#similarity").data("id", state.currentCase.similarity);
-    $("#view-doc").data("content", state.currentCase.content);
-    attachHandlers();
-    $(".back").click(backHandler);
-    $("#view-doc").click(viewHandler);
-    $("#citations").click(citationHandler);
-    $("#similarity").click(similarityHandler);
+    // var results = $("body").find(".result");
+    // for(var i = 0; i < results.length; i++) {
+    //     var result = $(results[i]);
+    //     result.find(".title").data("content", state.data[i].title);
+    //     result.find(".title").data("citations", state.data[i].citation);
+    //     result.find(".title").data("id", state.data[i].similarity);
+    // }
+    // $("#citations").data("ids", state.currentCase.citations);
+    // $("#citations").data("page", state.currentCase.citationPage);
+    // $("#similarity").data("id", state.currentCase.similarity);
+    // $("#view-doc").data("content", state.currentCase.content);
+    // attachHandlers();
+    // $(".back").click(backHandler);
+    // $("#view-doc").click(viewHandler);
+    // $("#citations").click(citationHandler);
+    // $("#similarity").click(similarityHandler);
+    // $("#pagination").find(".glyphicon").click(pageHandler);
+    // $("#search").submit(searchHandler);
 }
-    
+
+function searchHandler() {
+    console.log("search called");
+    var url = "http://52.36.127.109:9000/search"
+    //var url = "/search";
+    //e.preventDefault();
+    // serialize function uses the name attribute associated with
+    // the input[type=text]
+    $.post(url, $(this).serialize())
+        .done(function(data) {
+            var json = JSON.parse(data);
+    //console.log(json.documents[0].opinions_cited);
+            if(json.documents == null) {
+                console.log("error");
+                return;
+            }
+            var docs = json.documents;
+            var citations = [];
+            var data = [];
+            $("#results").html("");
+            if($("#nav-container").find($("#form-container")).length == 0) {
+                $("#img-container").css("display", "none");
+                $("#nav-container").prepend($("<div>").html($("#form-container")));
+                $("#form-container").css({
+                    display: "inline-block",
+                    margin: "0",
+                    float: "left"
+                });
+                $("#form-container").find("form").css({
+                    marginBottom: "0"
+                });
+                $("#form-container").find("a").css({
+                    lineHeight: $("#nav-container").css("height")
+                });
+                $("#results-wrapper").css("top", $("#nav-container").css("height"));
+                $("#vis").css("top", $("#nav-container").css("height"));
+                $(".back").css("display", "inline-block");
+            }
+            for(var i = 0; i < docs.length; i++) {
+                var ids = cleanCitations(docs[i].opinions_cited);
+                var content = docs[i].html;
+                var caseTitle = getTitle(docs[i].absolute_url);
+                var result = buildResult(docs[i], i);
+                $("#results").append(result);
+            }
+            // add event handlers
+            attachHandlers();
+            $("#case-header").css("display", "none");
+            $("#vis").find("svg").remove();
+        });
+}
+   
 function attachHandlers() {
     $(".title").click(resultHandler);
     $(".title").mouseover(function() {
@@ -262,34 +344,36 @@ function attachHandlers() {
         $("circle" + target).attr({
             fill: "blue"
         });
-        
     });
 }
 
 function saveState() {
-    var data = [];
-    var results = $("body").find(".result");
-    for(var i = 0; i < results.length; i++) {
-        var title = $(results[i]).find(".title");
-        data.push({
-            title: title.data("content"),
-            citation: title.data("citations"),
-            similarity: title.data("id")
-        });
-    }
-    states.push({
-        content: $("body").html(),
-        currentCase: {
-            content: $("#view-doc").data("content"),
-            citations: $("#citations").data("ids"),
-            similarity: $("#similarity").data("id")
-        },
-        data: data
-    });
+    states.push($("body").clone(true));
+    // var data = [];
+    // var results = $("body").find(".result");
+    // for(var i = 0; i < results.length; i++) {
+    //     var title = $(results[i]).find(".title");
+    //     data.push({
+    //         title: title.data("content"),
+    //         citation: title.data("citations"),
+    //         similarity: title.data("id")
+    //     });
+    // }
+    // states.push({
+    //     content: $("body").clone(true),
+    //     currentCase: {
+    //         content: $("#view-doc").data("content"),
+    //         citations: $("#citations").data("ids"),
+    //         citationPage: $("#citations").data("page"),
+    //         similarity: $("#similarity").data("id")
+    //     },
+    //     data: data
+    // });
+    //console.log($("#citations").data("page"));
 }
 
 
-function buildResult(doc, index) {
+function buildResult(doc = null, index) {
     var ids = cleanCitations(doc.opinions_cited);
     var content = doc.html;
     var caseTitle = getTitle(doc.absolute_url);
@@ -304,9 +388,7 @@ function buildResult(doc, index) {
     var options = $("<div>");
     var snippet = $("<div>");
     var attrs = $("<ul>");
-    
-    var samples = ["Judge", "Data", "Pettitioner", "Etc."]
-    
+        
     // Set up title
     title.html(caseTitle);
     title.attr("class", "group-" + index);
@@ -334,31 +416,17 @@ function buildResult(doc, index) {
     snippet.html("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed dignissim libero. Phasellus sed enim ac eros accumsan vestibulum eu quis lacus. Proin condimentum rutrum neque, et molestie orci aliquam.");
     
     // attrs
-    // samples.forEach(function(e, i, a) {
-    //     attrs.append($("<li>").html(e));
-    // });
-    // console.log(doc.caseCite);
-    // var url = "http://52.36.127.109:9000/caseInfo";
-    // var data = "caseCite=395 U.S. 784";
-    // $.ajax({
-    //     url: url,
-    //     type: "GET",
-    //     dataType: "text",
-    //     data: data,
-    //     contentType: "text/plain",
-    //     success: function(response) {
-    //         var obj = JSON.parse(response);
-    //         for(var key in obj) {
-    //             console.log(obj[key]);
-    //             attrs.append($("<li>").html(obj[key]));
-    //             options.append(attrs);
-    //         }
-    //     }
-    // });
+    attrs.append($("<li>").html("Date: " + doc.date));
+    attrs.append($("<li>").html("Issue: " + doc.issue));
+    attrs.append($("<li>").html("Respondent: " + doc.respondent));
+    attrs.append($("<li>").html("Chief Justice: " + doc.chiefJustice));
+    attrs.append($("<li>").html("Issue Area: " + doc.issueArea));
+    attrs.append($("<li>").html("Petitioner: " + doc.petitioner));
+    attrs.attr("class", "info");
     
     // Append everything to result
     //options.append(showCitations, similarity);
-    options.append(snippet);
+    options.append(snippet, attrs);
     options.attr("class", "options");
     result.append(link);
     result.append(options);
@@ -367,19 +435,18 @@ function buildResult(doc, index) {
 }
 
 function updateResults(docs) {
-    //console.log(selectedCase.title);
     $("#results").html("");
-    //var header = $("<h2>");
+    if(typeof docs == "string") {
+        var message = $("<h2>");
+        message.html(docs);
+        $("#results").append(message);
+        $("#vis").find("svg").remove();
+        return;
+    }
     var data = [];
-    //console.log(docs[0]);
-    //header.html("Citations for: " + docs[0].title);
-    //$("#results").append(header);
     var i = 1;
     console.log(docs.length);
     var citations = [];
-    // docs.forEach(function(e, i, a) {
-    //     $("#results").append(buildResult(e, i)); 
-    // });
     for(var i = 0; i < docs.length; i++)
         $("#results").append(buildResult(docs[i], i));
     // while(true) {
@@ -419,90 +486,14 @@ $(document).ready(function(){
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);
     $("#view-doc").click(viewHandler);
-    $("#pagination").find(".glyphicon").click(pageHandler);
+    $(".prev-button").click(pageHandler);
+    $(".next-button").click(pageHandler);
     
-    
-    $("#search").submit(function(e){
-        var url = "http://52.36.127.109:9000/search"
-        //var url = "/search";
-        e.preventDefault();
-        // serialize function uses the name attribute associated with
-        // the input[type=text]
-        $.post(url, $(this).serialize())
-            .done(function(data) {
-                var json = JSON.parse(data);
-        //console.log(json.documents[0].opinions_cited);
-                if(json.documents == null) {
-                    console.log("error");
-                    return;
-                }
-                var docs = json.documents;
-                var citations = [];
-                var data = [];
-                $("#results").html("");
-                if($("#nav-container").find($("#form-container")).length == 0) {
-                    $("#img-container").css("display", "none");
-                    $("#nav-container").prepend($("<div>").html($("#form-container")));
-                    $("#form-container").css({
-                        display: "inline-block",
-                        margin: "0",
-                        float: "left"
-                    });
-                    $("#form-container").find("form").css({
-                        marginBottom: "0"
-                    });
-                    $("#form-container").find("a").css({
-                        lineHeight: $("#nav-container").css("height")
-                    });
-                    $("#results-wrapper").css("top", $("#nav-container").css("height"));
-                    $("#vis").css("top", $("#nav-container").css("height"));
-                    $(".back").css("display", "inline-block");
-                }
-                for(var i = 0; i < docs.length; i++) {
-                    var ids = cleanCitations(docs[i].opinions_cited);
-                    var content = docs[i].html;
-                    var caseTitle = getTitle(docs[i].absolute_url);
-                    var result = buildResult(docs[i], i);
-                    $("#results").append(result);
-                }
-                // add event handlers
-                attachHandlers();
-                $("#case-header").css("display", "none");
-                $("#vis").html("");
-                /* Start old results
-                var modalBackground = "<div id=\"modal-background\"></div>";
-                    var containerHTML = "<div id=\"modal-container\"></div>";
-                    $("body").prepend(modalBackground);
-                    $("#modal-background").append(containerHTML);
-                    $("#modal-background").click(function() {
-                        if($(event.target).is("#modal-background")) {
-                                $("#modal-background").remove();
-                        }
-                    });
-                        
-                var i =0;
-                var citations = [];
-                while(i < json.documents.length){
-                    citations[i] = cleanCitations(json.documents[i].opinions_cited);
-                    //console.log(citations);
-                    $("#modal-container").append("<br>");
-                                        
-                    $("#modal-container").append("<div id=" + divId + " class='collapse'> </div>");
-                    $("#"+divId).append(json.documents[i].html);
-                    
-                    var caseTitle = $("#"+divId).find(".parties").text();
-                    caseTitle.replace(/<(?:.|\n)*?>/gm, ' ');
-                    var actualResultNumber = i + 1;
-                    var divId = "result" + i;
-                    var buttonHTML =  "<button type='button' class='btn btn-info' data-toggle='collapse'"+ "data-target='#"+divId+"'>"+ caseTitle + " </button>"; 	
-                    var citationLink = "<a class='citations' data-target='" + i + "'>Show citations</a>"
-                    $("#modal-container").append(buttonHTML);
-                    $("#modal-container").append(citationLink);
-                    
-                    i++;
-                }
-                End previous results
-                */
-            });	
-        });
+    $("#menu").find(".glyphicon").click(function() {
+        $("#menu").css("display", "none");
     });
+    
+    
+    $("#search").submit(searchHandler);
+       
+});
