@@ -116,8 +116,25 @@
   <script src="/assets/javascripts/validate.js"></script>
   <script src="/assets/javascripts/modal.js"></script>
   <script>
+    var maxID = -1;
+
     var sessionClicked = function() {
-      alert("session clicked");
+      var url = '/session';
+      var obj = {'id':$(this).attr('id')};
+      console.log($(this).attr('id'));
+
+      $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: url,
+        data: JSON.stringify(obj)
+      }).done(function(res) {
+        if(res.error != null) {
+          alert(res.error);
+        }
+      });
+
+      window.location = "/search";
     };
 
     // the newSession() generates the following html structure 
@@ -134,7 +151,7 @@
     //   </div>
     // </div>
 
-    var newSession = function(name, description) {
+    var newSession = function(name, description, id) {
       $('#sessions-container').prepend(
         $('<div/>').append(
           $('<div/>').append(
@@ -146,7 +163,8 @@
             $('<div/>').html(description)
                        .addClass('session-description-content')
             ).addClass('session-description')
-          ).addClass('session session-box')
+          ).attr('id', id)
+           .addClass('session session-box')
            .click(sessionClicked)
         );
     };
@@ -158,7 +176,7 @@
 // need to check if the response is erroneous or not.
         for(var i = 0; i < res.length; ++i) {
           var session = res[i];
-          newSession(session.name, session.description);
+          newSession(session.name, session.description, session.id);
         }
         $('#loading').remove();
       });
@@ -191,9 +209,10 @@
           $('#session-form').submit(function(e){
             e.preventDefault();
 
-            var url = "/session";
+            var url = "/sessions";
             var name = $('#session-name').val();
             var description = $('#session-description').val();
+            var id = maxID + 1;
 
             // check that the session was at least given a name
             if(name.length == 0) {
@@ -201,7 +220,7 @@
               return;
             }
 
-            var obj = {"name":name, "description":description};
+            var obj = {"name":name, "description":description, "id":id};
 
             $.ajax({
               type: 'POST',
@@ -214,14 +233,13 @@
               }
             });
 
-            newSession(name, description);
+            newSession(name, description, id);
             removeModal();
           });
         });
       });
-      $(".session").click(function(){
-        alert("session clicked");
-      });
+
+      $(".session").click(sessionClicked);
     });
   </script>
 </head>
