@@ -31,7 +31,25 @@ function getId(uri) {
 }
 
 function resultHandler() {
+    var url = '/document';
+    var obj = { 'docID':$(this).data("id") };
+
     saveState();
+
+    // add document to history, even if the user doesn't
+    // view it, because its part of the rationale/breadcrumb
+    // for falling down this rabbit-hole.
+    $.ajax({
+        type:'POST',
+        contentType: 'application/json',
+        url: url,
+        data: JSON.stringify(obj)
+    }).done(function(res) {
+        if(res.error != null) {
+            alert("hello " + res.error);
+        }
+    });
+
     $("#citations").removeClass(".selected");
     var title = $(this).find("h3").text();
     if($("#case-header").css("display") == "none") {
@@ -46,22 +64,21 @@ function resultHandler() {
     $("#citations").data("ids", $(this).data("citations"));
     $("#citations").data("page", 0);
     $("#similarity").data("id", $(this).data("id"));
+    $("#view-doc").data("id", $(this).data("id"));
     $("#view-doc").data("content", $(this).data("content"));
     $("#pagination").css("display", "block");
     $("#citations").click();
 }
 
 function viewHandler() {
-    var modalBackground = "<div id=\"modal-background\"></div>";
-    var containerHTML = "<div id=\"modal-container\"></div>";
-    $("body").prepend(modalBackground);
-    $("#modal-background").append(containerHTML);
-    $("#modal-background").click(function() {
-        if($(event.target).is("#modal-background")) {
-                $("#modal-background").remove();
-        }
+    var html = $(this).data("content");
+    var id = $(this).data("id");
+    // createModal depends on the inclusion of modal.js and modal.css
+    // to function properly
+    createModal('95%', '95vh');
+    $("#modal-container").load('/assets/html/document.html', function() {
+      doc_init(id, html);
     });
-    $("#modal-container").append($(this).data("content"));
 }
 
 function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCase) {

@@ -40,8 +40,14 @@ GET     /search-css                 controllers.Assets.at(path="/public", file="
 POST    /testGraph                  controllers.Application.testGraph()
 
 GET     /sessions                   controllers.Assets.at(path="/public", file="html/sessions.html")
+POST    /sessions                   controllers.Application.addSession()
 
 GET     /session                    controllers.Application.getSessions()
-POST    /session                    controllers.Application.addSession()
+POST    /session                    controllers.Application.visitSession()
+
+POST    /document                   controllers.Application.addDocumentToSession()
+
+GET     /highlight                  controllers.Application.getHighlights(docID:String)
+POST    /highlight                  controllers.Application.addHighlight()
 
 GET     /validate                   controllers.Application.validate()
