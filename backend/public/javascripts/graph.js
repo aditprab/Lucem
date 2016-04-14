@@ -27,10 +27,10 @@ function testGraph() {
     return title;
 }*/
 
-function getId(uri) {
-    var buff = uri.split("/");
-    return buff[buff.length - 2];
-}
+// function getId(uri) {
+//     var buff = uri.split("/");
+//     return buff[buff.length - 2];
+// }
 
 function getContent(node) {
     /*if(node.html_with_citations != "")
@@ -269,13 +269,15 @@ function buildGraph(selectedCase, nodes, count) {
             d3.select(this).select("circle").attr("fill", "black");
         });
     
-    
-        
     node.on("click", function(d, i) {
         console.log(scale(d.score));
         var menu = $("#menu");
-        var attrs = $("#menu").find("ul");
-        menu.find("h3").html(d.absolute_url);
+        var attrs = menu.find("ul");
+        var link = menu.find("a");
+        link.data("content", d.html);
+        link.data("citations", cleanCitations(d.opinions_cited));
+        link.data("id", getId(d.resource_uri));
+        menu.find("h3").html(getTitle(d.absolute_url));
         attrs.html("");
         attrs.append($("<li>").html("Date: " + d.date));
         attrs.append($("<li>").html("Issue: " + d.issue));
@@ -290,6 +292,7 @@ function buildGraph(selectedCase, nodes, count) {
             top: d.y - (height + d.radius),
             left: d.x - width/2
         });
+        
     });
     
     force.on("tick", function() {

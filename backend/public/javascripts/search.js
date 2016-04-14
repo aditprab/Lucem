@@ -373,7 +373,7 @@ function saveState() {
 }
 
 
-function buildResult(doc = null, index) {
+function buildResult(doc, index) {
     var ids = cleanCitations(doc.opinions_cited);
     var content = doc.html;
     var caseTitle = getTitle(doc.absolute_url);
@@ -482,6 +482,7 @@ function showChildren(currentDoc, docs) {
     
 $(document).ready(function(){
     
+    $(".menu-title").click(resultHandler);
     $(".back").click(backHandler);
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);

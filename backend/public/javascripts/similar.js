@@ -75,7 +75,10 @@ function buildSimVis(selectedCase, nodes) {
     for(var i = 0; i < nodes.length; i++) {
         var node = {
             radius: radius,
+            html: nodes[i].html,
             absolute_url: nodes[i].absolute_url,
+            resource_uri: nodes[i].resource_uri,
+            opinions_cited: nodes[i].opinions_cited,
             score: nodes[i].score,
             date: nodes[i].date,
             issue: nodes[i].issue,
@@ -180,7 +183,11 @@ function buildSimVis(selectedCase, nodes) {
         console.log(scale(d.score));
         var menu = $("#menu");
         var attrs = $("#menu").find("ul");
-        menu.find("h3").html(d.absolute_url);
+        var link = menu.find("a");
+        link.data("content", d.html);
+        link.data("citations", cleanCitations(d.opinions_cited));
+        link.data("id", getId(d.resource_uri));
+        menu.find("h3").html(getTitle(d.absolute_url));
         attrs.html("");
         attrs.append($("<li>").html("Date: " + d.date));
         attrs.append($("<li>").html("Issue: " + d.issue));
