@@ -43,6 +43,8 @@ var highlightModeOn = false;
       $("#right-sb").append("<button id=\"add-btn\">+</button>");
       $("#add-btn").click(function() {
         $(this).before("<textarea class=\"note\"></textarea>");
+        // get id of current highlight
+        $('.clicked').attr('id');
         $(".note").keyup(function() {
           if($("#hiddenDiv").length == 0) {
             $("#right-sb").prepend("<div id=\"hiddenDiv\"></div>");
@@ -243,7 +245,7 @@ console.log(obj);
         });
     };
 
-var doc_init = function(id, html) {
+var doc_init = function(id, html, callback) {
   var url = "/highlight";
   documentID = id;
   $("#document").html(html.replace(/ +(?=)/g, ' '));
@@ -267,6 +269,8 @@ var doc_init = function(id, html) {
       highlight(keys[i], data[keys[i]]);
     }
     $('.highlighted').click(highlight_clicked);
+
+    callback();
   });
 };
 
