@@ -42,7 +42,7 @@
      padding:5px 7px;
      width:65%;
    }
-   #search button[type=submit] {
+   #search-button {
      vertical-align:top;
      margin:1px 0 0 3px;
      height:3em;
@@ -55,7 +55,7 @@
      letter-spacing:0.5px;
      padding:0 12px;
    }
-   #search button[type=submit]:hover {
+   #search-button:hover {
      cursor:pointer;
      background-color:grey;
    }
@@ -121,16 +121,19 @@
         display: none;
     }
     
-    #pagination > .glyphicon {
+    /*#pagination > .glyphicon {
         font-size: 1em;
-    }
+        cursor: pointer;
+    }*/
     
-    .prev-page {
+    .prev-button {
         float: left;
+        cursor: pointer;
     }
     
-    .next-page {
+    .next-button {
         float: right;
+        cursor: pointer;
     }
     
     #results > h2 {
@@ -154,7 +157,7 @@
     }   
     
     .title > h3 {
-        display: inline;
+        margin-top: 10px;
     }
     
     .options {
@@ -184,33 +187,33 @@
     #header-title {
         text-align: center;
         text-transform: uppercase;
-        padding: 10px;
+        /*padding: 10px;*/
     }
     
-    #header-nav {
+    .header-nav {
         overflow: hidden;
         background-color: #666666;
         color: white;
-        /*border: 1px solid black;*/
+        border: 1px solid #666666;
     }
     
     #nav-left {
-        width: 30%;
+        width: 5%;
         float: left;
     }
     
     #nav-right {
-        width: 70%;
+        width: 95%;
         float: right;
     }
     
     .header-button {
         float: left;
-        width: 50%;
+        width: 33.33%;
         text-align: center;
-        border-left: 1px solid black;
+        border-left: 1px solid gray;
         margin: 0;
-        padding: 10px;
+        /*padding: 10px;*/
     }
     
     .button-wrapper:nth-child(1) {
@@ -225,21 +228,82 @@
         background-color: gray;
     }
     
+    #top-nav {
+        text-align: center;
+    }
+    
+    .top-wrapper {
+        margin: 10px 0;
+    }
+    
     #view-doc {
-        width: 90%;
+        display: inline;
     }
     
     .back {
-        width: 10%;
+        width: 100%;
+    }
+    
+    .back > .glyphicon {
+        padding: 9px;
+        font-size: 1.5em;
     }
     
     .selected {
         background-color: whitesmoke !important;
-        border: 1px solid #666666;
         color: black;
+        /*border-left: 1px solid black;
+        border-right: 1px solid black;*/
     }
     
-    .options > ul li {
+    #menu {
+        position: absolute;
+        display: none;
+        width: 300px;
+        /*height: 100px;*/
+        border: 2px solid black;
+        /*border-radius: 20px;*/
+        background-color: white;
+    }
+    
+    #menu > .glyphicon-remove {
+        float: right;
+        font-size: 1.5em;
+        top: -10px;
+        left: 10px;
+        cursor: pointer;
+    }
+    
+    #menu > .title {
+        text-align: center;
+    }
+    
+    .info {
+        overflow: hidden;
+        padding: 0;
+    }
+    
+    .info > li {
         float: left;
         width: 50%;
+        padding: 10px;
+    }
+    
+    #facet-select {
+        display: none;
+        padding: 10px;
+        position: relative;
+        text-align: center;
+    }
+    
+    label, input[type="checkbox"] {
+        cursor: pointer;
+    }
+    
+    #facet-select label {
+        margin: 10px 35px;
+    }
+    
+    .node {
+        cursor: pointer;
     }

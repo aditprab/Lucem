@@ -3,13 +3,16 @@
   <title>Search - Lucem</title>
   <link href='https://fonts.googleapis.com/css?family=Raleway:500,700' rel='stylesheet' type='text/css'>
   <link href="/search-css" rel="stylesheet" type="text/css">
+  <link href="/assets/stylesheets/modal.css" rel="stylesheet" type="text/css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8" defer></script>
   <script src="/graph-js" defer></script>
   <script src="/similar-js" defer></script>
   <script src="/facet-js" defer></script>
+  <script src="/assets/javascripts/document.js"></script>
+  <script src="/assets/javascripts/modal.js"></script>
   <script src="/search-js" defer></script>
-  
+
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 </head>
@@ -28,40 +31,81 @@
     </div>
   </div>
   <div id="form-container">
-    <form id="search">
+    <form onsubmit="return false" id="search">
      <input type="text" id="query" name="query">
      </input>
-     <button class="uppercase" type="submit" value="Search">
+     <button class="uppercase" type="submit" id="search-button" value="Search">
        Search
      </button>
     </form>
   </div>
   <div id="case-header">
-      <div id="title-wrapper">
-          <!--<div id="back-wrapper">
-            <a class="back">Back</a>
-           </div>-->
-          <h1 id="header-title">Brown v. Board</h1>
+      <div id="top-nav">
+        <div class="top-wrapper">
+            <h1 id="header-title"></h1>
+        </div>
+        <div class="top-wrapper">
+            <a id="view-doc">
+                <h5 id="view-doc">View Case</h4>
+            </a>
+        </div>
       </div>
-      <div id="header-nav">
+      <div class="clear"></div>
+      <div class="header-nav">
           <div id="nav-left">
-            <div class="header-button glyphicon glyphicon-chevron-left back"></div>
-            <h4 class="header-button" id="view-doc">View</h4>
+            <div class="header-button back">
+                <div class="glyphicon glyphicon-chevron-left"></div>
+                <!--<h4>Back</h4>-->
+            </div>
           </div>
           <div id="nav-right">
-            <h4 class="header-button" id="citations">Citations</h4>
-            <h4 class="header-button" id="similarity">Similarity</h4>
-          </div>
+            <div class="header-button" id="citations">
+                <h4>Citations</h4>
+            </div>
+            <div class="header-button" id="similarity">
+                <h4>Similar Content</h4>
+            </div>
+            <div class="header-button" id="facets">
+                <h4>Similar Categories</h4>
+            </div>          
+        </div>
       </div>
   </div>
+  <div id="facet-select">
+        <form>
+            <label><input type="checkbox" value="10"> Term Year</label>
+            <label><input type="checkbox" value="12"> Chief Justice</label>
+            <label><input type="checkbox" value="17"> Petitioner</label>
+            <label><input type="checkbox" value="19"> Respondent</label>
+            <label><input type="checkbox" value="41"> Issue Area</label>
+            <label><input type="checkbox" value="42"> Decision Direction</label>
+            <label><input type="checkbox" value="46"> Law Type</label>
+        </form>
+    </div>
   <div id="results-wrapper">
     <div id="pagination">
-        <span class="glyphicon glyphicon-chevron-left prev-page"></span>
-        <span class="glyphicon glyphicon-chevron-right next-page"></span>
+        <span class="prev-button">
+            <span class="glyphicon glyphicon-chevron-left prev-page"></span>
+            Previous
+        </span>
+        <span class="next-button">
+            Next
+            <span class="glyphicon glyphicon-chevron-right next-page"></span>
+        </span>
     </div>
     <div id="results"></div>
   </div>
-  <div id="vis"><div>
+  <div id="vis">
+      <div id="menu">
+        <span class="glyphicon glyphicon-remove"></span>
+        <div id="title-wrapper">
+            <a class="menu-title">
+                <h3></h3>
+            </a>
+        </div>
+        <ul class="info"></ul>
+    </div>
+  </div>
   <div id="document"></div>
 </body>
 </html>

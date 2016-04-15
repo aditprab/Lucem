@@ -1,0 +1,118 @@
+#document-container {
+  margin:5em 5%;
+  text-align:left;
+}
+.sidebar {
+  position:fixed;
+  vertical-align:top;
+  margin:0 4.5%;
+  display:inline-block;
+  width:26%;
+  height:100vh;
+}
+#document {
+  text-align:left;
+  margin:0;
+  display:inline-block;
+  width:60%;
+  padding:0 35px;
+}
+
+.highlighted {
+  background-color:rgb(225, 225, 225);
+  cursor:pointer;
+}
+.highlighted:hover {
+  background-color:rgb(255,255,88);
+}
+.note {
+  margin-bottom:0.75em;
+}
+.note, #hiddenDiv {
+  resize:none;
+  font-size:12px;
+  font-family:Helvetica;
+  width:100%;
+  min-height:15em;
+}
+#hiddenDiv {
+  display:none;
+  width:85%;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  border:1px solid;
+}
+#add-btn {
+  width:100%;
+  font-size:36px;
+  background-color:white;
+  border:1px solid grey;
+  height:1.75em;
+  color:grey;
+  cursor:pointer;
+}
+.clicked {
+  background-color:rgb(255,255,88);
+}
+#highlight-btn {
+border: 1px buttonface solid;
+}
+.hidden {
+  display:none;
+}
+
+.case_cite, .parties, .docket, .date {
+  text-align:center;
+}
+.parties {
+   font-size:18px;
+   font-weight:700;
+}
+.indent {
+   text-indent:15px;
+}
+span.num {
+   font-style:italic;
+}
+#action-panel {
+   float:left;
+   position:absolute;
+   top:10%;
+   margin:0;
+   padding:0;
+   width:55px;
+   border:1px solid black;
+/*
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+*/
+   -webkit-border-top-right-radius:5px;
+   -webkit-border-bottom-right-radius:5px;
+   -moz-border-top-right-radius:5px;
+   -moz-border-bottom-right-radius:5px;
+   border-top-right-radius:5px;
+   border-bottom-right-radius:5px;
+   border-left:none;
+   /* necessary for buttons to be centered */
+   text-align:center;
+}
+.btn {
+   cursor:pointer;
+   height:38px;
+   width:38px;
+   margin:5px;
+   background-color:transparent;
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   border: 1px rgb(8, 8, 8) solid !important;
+}
+#highlight-btn {
+   background-image: url("http://www2.psd100.com/ppp/2013/09/2601/chisel-tip-marker-icon-0926020027.png");
+   background-repeat:no-repeat;
+   background-size:auto 100%;
+}
+a.footnote {
+   color:#0066FF;
+}

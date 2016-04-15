@@ -135,6 +135,17 @@ public class Application extends Controller {
           }
           return ok(result);
      }
+    
+    public static Result testFacet() {
+        String obj = "{\"similarCases\":[";
+        for(int i = 0; i < 10; i++) {
+            obj += "{\"courtId\":\"104997\", \"pageRank\":\"0.1\"}";
+            if(i < 9)
+                obj += ",";
+        }
+        obj += "]}";
+        return ok(obj);
+    } 
      
     public static Result testGraph() {
          Random rand = new Random();
@@ -228,22 +239,115 @@ public class Application extends Controller {
         final Http.Session session = Http.Context.current().session();
         JsonNode req = request().body().asJson();
         ObjectNode res = factory.objectNode();
-        final String[] expectedKeys = {"name", "description"};
+        final String[] expectedKeys = {"name", "description", "id"};
 
         if(req == null || !isValidRequest(req, expectedKeys)) {
           res.put("error", "invalid request");
-          if(req == null) {
-            res.put("error", request().body().asText());
-          }
         } else {
           User user = User.find(session.get("email"));
 
           user.addSession(req.get("name").asText(),
-                          req.get("description").asText());
+                          req.get("description").asText(),
+                          req.get("id").asInt());
 
-          Thread t = new Thread(new SessionWriter(user));
+          Thread t = new Thread(new UserWriter(user));
           t.start();
 
+          res.put("status", "ok");
+        }
+
+        response().setContentType("application/json");
+        return ok(res);
+    }
+
+    public static Result visitSession() {
+        final Http.Session session = Http.Context.current().session();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
+        final String[] expectedKeys = {"id"};
+
+        if(!isValidRequest(req, expectedKeys)) {
+          res.put("error", "invalid request");
+        } else {
+          session.put("sessionID", req.get("id").asText());
+          res.put("status", "ok");
+        }
+
+        response().setContentType("application/json");
+        return ok(res);
+    }
+
+    public static Result addDocumentToSession() {
+        final Http.Session session = Http.Context.current().session();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
+        final String[] expectedKeys = {"docID"};
+
+// separating this and else if case so that an alert won't be triggered
+// for the error response
+        if(session.get("sessionID") == null) {
+          res.put("user", "not logged in");
+        } else if(!isValidRequest(req, expectedKeys)) {
+          res.put("error", "invalid request");
+        } else {
+          User user = User.find(session.get("email"));
+          int sessionID = Integer.parseInt(session.get("sessionID"));
+
+          user.addDocument(sessionID, req.get("docID").asText());
+
+          Thread t = new Thread(new UserWriter(user));
+          t.start();
+
+          res.put("status", "ok");
+        }
+
+        response().setContentType("application/json");
+        return ok(res); 
+    }
+
+    public static Result getHighlights(String docID) {
+      final Http.Session session = Http.Context.current().session();
+      ObjectNode res = factory.objectNode();
+      int sessionID;
+
+      if(session.get("email") == null || session.get("sessionID") ==
+         null) {
+        res.put("error", "not logged in");
+        return ok(res);
+      }
+
+      sessionID = Integer.parseInt(session.get("sessionID"));
+
+      User user = User.find(session.get("email"));
+
+      response().setContentType("application/json");
+
+      return ok(user.getHighlights(sessionID, docID));
+    }
+
+    public static Result addHighlight() {
+        final Http.Session session = Http.Context.current().session();
+        JsonNode req = request().body().asJson();
+        ObjectNode res = factory.objectNode();
+        final String[] expectedKeys = {"docID", "startIndex",
+                                       "stopIndex"};
+
+        if(session.get("email") == null || session.get("sessionID") ==
+           null) {
+          res.put("user", "not logged in"); 
+        } else if(!isValidRequest(req, expectedKeys)) {
+          res.put("error", "invalid request");
+        } else {
+          User user = User.find(session.get("email"));
+          int sessionID = Integer.parseInt(session.get("sessionID"));
+
+          user.addHighlight(sessionID, req.get("docID").asText(),
+                            req.get("startIndex").asInt(),
+                            req.get("stopIndex").asInt());
+
+          Thread t = new Thread(new UserWriter(user));
+          t.start();
+ 
           res.put("status", "ok");
         }
 
