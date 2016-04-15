@@ -69,7 +69,10 @@ function buildSimVis(selectedCase, nodes) {
         fixed: true,
         x: width/2,
         y: height/2,
-        radius: radius
+        radius: radius,
+        absolute_url: selectedCase.absolute_url,
+        content: selectedCase.content,
+        resource_uri: ""
     }];
     var links = [];
     for(var i = 0; i < nodes.length; i++) {
@@ -136,12 +139,29 @@ function buildSimVis(selectedCase, nodes) {
             });
         
     var nodeGroup = container.selectAll("g")
-        .data(data).enter().append("g");
+        .data(data).enter().append("g")
+        .attr("class", function(d) {
+            $(this).click(nodeHandler);
+            return "node";
+        });
 
     var node = nodeGroup.append("circle")
         .attr({
             class: function(d, i) {
-                return "node group-" + i;
+                $(this).data("docInfo", {
+                    title: getTitle(d.absolute_url),
+                    content: d.html,
+                    citations: cleanCitations(d.opinions_cited),
+                    id: getId(d.resource_uri),
+                    caseCite: d.caseCite,
+                    date: d.data,
+                    issue: d.issue,
+                    respondent: d.respondent,
+                    chiefJustice: d.chiefJustice,
+                    issueArea: d.issueArea,
+                    petitioner: d.petitioner
+                });
+                return "group-" + i;
             },
             r: function(d) {
                 return d.radius;
@@ -169,6 +189,11 @@ function buildSimVis(selectedCase, nodes) {
         // End code snippet
         nodeGroup.attr({
             transform: function(d) {
+                $(this).data("graph", {
+                    x: d.x,
+                    y: d.y,
+                    radius: d.radius
+                });
                 return "translate(" + [d.x, d.y] + ")";
             }
         });
@@ -177,31 +202,6 @@ function buildSimVis(selectedCase, nodes) {
                 return distanceBetween(d, data[0]);
             }
         })
-    });
-    
-    node.on("click", function(d, i) {
-        console.log(scale(d.score));
-        var menu = $("#menu");
-        var attrs = $("#menu").find("ul");
-        var link = menu.find("a");
-        link.data("content", d.html);
-        link.data("citations", cleanCitations(d.opinions_cited));
-        link.data("id", getId(d.resource_uri));
-        menu.find("h3").html(getTitle(d.absolute_url));
-        attrs.html("");
-        attrs.append($("<li>").html("Date: " + d.date));
-        attrs.append($("<li>").html("Issue: " + d.issue));
-        attrs.append($("<li>").html("Respondent: " + d.respondent));
-        attrs.append($("<li>").html("Chief Justice: " + d.chiefJustice));
-        attrs.append($("<li>").html("Issue Area: " + d.issueArea));
-        attrs.append($("<li>").html("Petitioner: " + d.petitioner));
-        var width = menu.width();
-        var height = menu.height();
-        $("#menu").css({
-            display: "block",
-            top: d.y - (height + d.radius),
-            left: d.x - width/2
-        });
     });
     
     node.on("mouseover", function(d) {

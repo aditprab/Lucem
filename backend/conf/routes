@@ -51,3 +51,4 @@ GET     /highlight                  controllers.Application.getHighlights(docID:
 POST    /highlight                  controllers.Application.addHighlight()
 
 GET     /validate                   controllers.Application.validate()
+GET     /testFacet                 controllers.Application.testFacet()

@@ -209,7 +209,7 @@
     
     .header-button {
         float: left;
-        width: 50%;
+        width: 33.33%;
         text-align: center;
         border-left: 1px solid gray;
         margin: 0;
@@ -287,4 +287,23 @@
         float: left;
         width: 50%;
         padding: 10px;
+    }
+    
+    #facet-select {
+        display: none;
+        padding: 10px;
+        position: relative;
+        text-align: center;
+    }
+    
+    label, input[type="checkbox"] {
+        cursor: pointer;
+    }
+    
+    #facet-select label {
+        margin: 10px 35px;
+    }
+    
+    .node {
+        cursor: pointer;
     }

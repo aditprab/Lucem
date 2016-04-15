@@ -119,6 +119,17 @@ public class Application extends Controller {
           }
           return ok(result);
      }
+    
+    public static Result testFacet() {
+        String obj = "{\"similarCases\":[";
+        for(int i = 0; i < 10; i++) {
+            obj += "{\"courtId\":\"104997\", \"pageRank\":\"0.1\"}";
+            if(i < 9)
+                obj += ",";
+        }
+        obj += "]}";
+        return ok(obj);
+    } 
      
     public static Result testGraph() {
          Random rand = new Random();

@@ -65,7 +65,10 @@ function resultHandler() {
     $("#citations").data("page", 0);
     $("#similarity").data("id", $(this).data("id"));
     $("#view-doc").data("id", $(this).data("id"));
+    $("#facets").data("caseCite", $(this).data("caseCite"));
     $("#view-doc").data("content", $(this).data("content"));
+    if($("#citations").hasClass("selected"))
+        $("#citations").removeClass("selected");
     $("#citations").click();
 }
 
@@ -150,17 +153,18 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
 }
 
 function citationHandler() {
-    // if($(this).hasClass("selected"))
-    //     return;
-    // if($("#similarity").hasClass("selected"))
-    //     saveState();
+    if($(this).hasClass("selected"))
+        return;
+    $(".selected").removeClass("selected");
+    $("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    $("#similarity").removeClass("selected");
+    if($(this).data("page") == 0)
+        clearPage();
     $("#menu").css("display", "none");
     var data = "";
     var selectedCase = {
-        absolute_url: $(this).parent().siblings(".title").find("h3").text(),
-        content: $(this).parent().siblings(".content").html(),
+        absolute_url: $("#header-title").text() + "/",
+        content: $("#view-doc").data("content")
     };
     //var container = event.data.citations[$(this).data("target")];
     var citations = $(this).data("ids");
@@ -195,14 +199,20 @@ function similarityHandler() {
     if($(this).hasClass("selected"))
         return;
     //saveState();
+    $(".selected").removeClass("selected");
+    //$("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    $("#citations").removeClass("selected");
+    clearPage();
     $("#citations").data("page", 0);
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
     console.log(field);
+    var selectedCase = {
+        absolute_url: $("#header-title").text() + "/",
+        content: $("#view-doc").data("content")
+    };
     $.ajax({
         url: url,
         type: "GET",
@@ -235,7 +245,71 @@ function similarityHandler() {
                     for(var i = 0; i < docs.length; i++) 
                         docs[i].score = simScores[i].score;
                     console.log(obj.documents);
-                    buildSimVis("", obj.documents);
+                    buildSimVis(selectedCase, obj.documents);
+                    updateResults(docs);
+                }
+            });
+        }
+    });
+}
+
+function facetHandler() {
+    if($(this).hasClass("selected"))
+        return;
+    $(".selected").removeClass("selected");
+    $(this).addClass("selected");
+    clearPage();
+    $("#facet-select").css({
+        display: "initial",
+        top: $("#nav-container").css("height")
+    });
+}
+
+function facetSelectHandler() {
+    var checked = $("#facet-select").find("input:checked");
+    var url = "http://52.36.127.109:9000/facetSearch"
+    var caseCite = "caseCite=" + $("#facets").data("caseCite");
+    var facetRequest = "&facetRequest=";
+    var data = "";
+    if(checked.length == 0)
+        return;
+    for(var i = 0; i < checked.length; i++) {
+        facetRequest += checked[i].value
+        if(i < checked.length - 1) 
+            facetRequest += ",";
+    }
+    data += caseCite + facetRequest;
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "text",
+        data: data,
+        contentType: "text/plain",
+        success: function(response) {
+            var ids = JSON.parse(response).similarCases;
+            var data = "";
+            var count = 0;
+            var index = 0;
+            //console.log(ids);
+            // sort ids based on page rank
+            while(count < maxResults && (index + count) < ids.length) {
+                data += ids[index + count].courtId;
+                if(count < maxResults - 1) 
+                    data += ",";
+                count++;
+            }
+            var url = "http://52.36.127.109:9000/getDocuments";
+            $.ajax({
+                url: url,
+                type: "POST",
+                dataType: "text",
+                data: data,
+                contentType: "text/plain",
+                success: function(response) {
+                    var docs = JSON.parse(response).documents;
+                    //console.log(docs);
+                    $("#vis").find("svg").remove();
+                    showScatterPlot(docs);
                     updateResults(docs);
                 }
             });
@@ -295,9 +369,44 @@ function backHandler() {
     // $("#search").submit(searchHandler);
 }
 
+function nodeHandler() {
+    var caseInfo = $(this).find("circle").data("docInfo");
+    var graph = $(this).data("graph");
+    var menu = $("#menu");
+    var attrs = menu.find("ul");
+    var link = menu.find("a");
+    link.data("content", caseInfo.content);
+    link.data("citations", caseInfo.citations);
+    link.data("id", caseInfo.id);
+    menu.find("h3").html(caseInfo.title);
+    attrs.html("");
+    attrs.append($("<li>").html("Date: " + caseInfo.date));
+    attrs.append($("<li>").html("Issue: " + caseInfo.issue));
+    attrs.append($("<li>").html("Respondent: " + caseInfo.respondent));
+    attrs.append($("<li>").html("Chief Justice: " + caseInfo.chiefJustice));
+    attrs.append($("<li>").html("Issue Area: " + caseInfo.issueArea));
+    attrs.append($("<li>").html("Petitioner: " + caseInfo.petitioner));
+    var width = menu.width();
+    var height = menu.height();
+    $("#menu").css({
+        display: "block",
+        top: graph.y - (height + graph.radius),
+        left: graph.x - width/2
+    });
+}
+
+function clearPage() {
+    $("#results").html("");
+    $("#pagination").css("display", "none");
+    $("#menu").css("display", "none");
+    $("#vis").find("svg").remove();
+    $("#facet-select").css("display", "none");
+    $("#facet-select").find("input").prop("checked", false);
+}
+
 function searchHandler() {
     console.log("search called");
-    var url = "http://52.36.127.109:9000/search"
+    var url = "http://52.36.127.109:9000/search";
     //var url = "/search";
     //e.preventDefault();
     // serialize function uses the name attribute associated with
@@ -395,7 +504,8 @@ function buildResult(doc, index) {
     var content = doc.html;
     var caseTitle = getTitle(doc.absolute_url);
     var id = getId(doc.resource_uri);
-    
+    var caseCite = doc.caseCite;
+        
     var result = $("<div>");
     var title = $("<h3>");
     var link = $("<a>");
@@ -414,6 +524,7 @@ function buildResult(doc, index) {
     link.data("content", content);
     link.data("citations", ids);
     link.data("id", id);
+    link.data("caseCite", caseCite);
     link.html(title);
     link.attr("class", "title group-" + (index + 1));
 
@@ -503,15 +614,39 @@ $(document).ready(function(){
     $(".back").click(backHandler);
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);
+    $("#facets").click(facetHandler);
     $("#view-doc").click(viewHandler);
     $(".prev-button").click(pageHandler);
     $(".next-button").click(pageHandler);
-    
+    $("#facet-select").find("input[type=checkbox]").click(facetSelectHandler);
+       
     $("#menu").find(".glyphicon").click(function() {
         $("#menu").css("display", "none");
     });
-    
-    
+
     $("#search").submit(searchHandler);
-       
+    
+    $(".node").click(function() {
+        console.log($(this).data("graph")); 
+    });
+    
+    // $("#search").submit(function() {
+    //     $("#img-container").css("display", "none");
+    //     $("#nav-container").prepend($("<div>").html($("#form-container")));
+    //     $("#form-container").css({
+    //         display: "inline-block",
+    //         margin: "0",
+    //         float: "left"
+    //     });
+    //     $("#form-container").find("form").css({
+    //         marginBottom: "0"
+    //     });
+    //     $("#form-container").find("a").css({
+    //         lineHeight: $("#nav-container").css("height")
+    //     });
+    //     $("#results-wrapper").css("top", $("#nav-container").css("height"));
+    //     $("#vis").css("top", $("#nav-container").css("height"));
+    //     $(".back").css("display", "inline-block");
+    //     resultHandler();
+    // });
 });

@@ -130,10 +130,14 @@ var topCases = [{
         "pageRank": 18
 }];
 
-showScatterPlot(topCases);
+//showScatterPlot(topCases);
+
+function getYear(date) {
+    return parseInt(date.split("/")[2]);
+}
 
 function showScatterPlot(data) {
-
+    console.log(data);
 	var margins = {
         	"left": 40,
             	"right": 30,
@@ -141,20 +145,20 @@ function showScatterPlot(data) {
             	"bottom": 30
     	};
     
-    	var width = 500;
-    	var height = 500;
+    var width = $("#vis").width();
+    var height = 350;
 
 	var conservative = "#d62728";
 	var liberal = "#1f77b4";
 	var unspecified = "#ff7f0e";
 
-	var svg = d3.select("#scatter-load").append("svg").attr("width", width).attr("height", height).append("g")
+	var svg = d3.select("#vis").append("svg").attr("width", width).attr("height", height).append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
 
 
 	var x = d3.scale.linear()
         .domain(d3.extent(data, function (d) {
-        return d.year;
+            return getYear(d.date);
     }))
 
 	.range([0, width - margins.left - margins.right]);
@@ -184,40 +188,40 @@ function showScatterPlot(data) {
 	//svg.selectAll("g.y.axis").call(yAxis);
     	svg.selectAll("g.x.axis").call(xAxis);
 
-	var node = svg.selectAll("g.node").data(data, function (d) {
-        return d.caseID;
-    });
+	// var node = svg.selectAll("g.node").data(data, function (d) {
+    //     return d.caseID;
+    // });
+    
+     var node = svg.selectAll("g.node").data(data);
 
 	 var nodeGroup = node.enter().append("g").attr("class", "node")
-	.attr('transform', function (d) {
-        
-	var random = Math.floor((Math.random() * 10) + 1);
-	return "translate(" + x(d.year) + "," + y(random) + ")";
-	});
+        .attr('transform', function (d, i) {
+            var random = Math.floor((Math.random() * 10) + 1);
+            return "translate(" + x(getYear(d.date)) + "," + y(random) + ")";
+        });
 
 	nodeGroup.append("circle")
        .attr("r", function (d) {
-	return d.pageRank;
-    })
-	.attr("class", "dot")
-        .style("fill", function (d) {
-	
-	if(d.decisionType == 1)
-	{
-		return conservative; 
-	}
-	
-	if(d.decisionType == 2)
-        {
-                return liberal;
-        }
+	        return 15;
+        })
+        .attr("class", "dot")
+            .style("fill", function (d) {
+                if(d.decisionType == 1)
+                {
+                    return conservative; 
+                }
+                
+                if(d.decisionType == 2)
+                {
+                    return liberal;
+                }
 
-	if(d.decisionType == 3)
-        {
-                return unspecified;
-        }
-
- });
+                if(d.decisionType == 3)
+                {
+                    return unspecified;
+                }
+        });
+    
 	nodeGroup.append("text")
         .style("text-anchor", "middle")
         .attr("dy", -10)
