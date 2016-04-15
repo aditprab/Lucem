@@ -2,6 +2,19 @@ var documents = [];
 var states = [];
 var maxResults = 5;
 
+function loadingAnimation(insertSelector) {
+    $(insertSelector).prepend(
+        $('<div/>').append(
+            $('<div/>').attr('id', 'loading-inner')
+                       .addClass('center-vertical')
+        ).attr('id', 'loading')
+    );
+}
+
+function removeLoadingAnimation() {
+    $('#loading').remove();
+}
+
 function cleanCitations(citations) {
     var ids = [];
     if(citations == null)
@@ -77,7 +90,7 @@ function viewHandler() {
     // to function properly
     createModal('95%', '95vh');
     $("#modal-container").load('/assets/html/document.html', function() {
-      doc_init(id, html);
+        doc_init(id, html, removeLoadingAnimation);
     });
 }
 

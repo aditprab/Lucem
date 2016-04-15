@@ -243,3 +243,27 @@
         float: left;
         width: 50%;
     }
+
+    #loading {
+        background-color:white;
+        position:fixed;
+        top:0;
+        left:0;
+        height:100%;
+        width:100%;
+        z-index:10;
+    }
+    #loading-inner {
+        top:42.5% !important;
+        position:fixed;
+        left:0;
+        right:0;
+        height:60px;
+        width:60px;
+        margin:0 auto;
+        background-image:url("/assets/images/loading.gif");
+        background-size:cover;
+        background-position: center center;
+        background-size:100% auto;
+        background-repeat:no-repeat;
+    }
