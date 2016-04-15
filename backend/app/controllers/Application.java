@@ -3,6 +3,8 @@ package controllers;
 import play.*;
 import play.mvc.*;
 
+import org.json.*;
+
 // following are necessary to handle JSON requests and responses
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -91,11 +93,25 @@ public class Application extends Controller {
     	return ok(result);
     }
 	
-    public static Result facet(String caseCite, String facetRequest){
-	//facetRequest is a comma separated list of fields.
-	//Mapping: 1- petitioner, 2- chief, 3- respondent, 4- jurisdiction, 5- issueArea, 6- issue, 7- authorityDecision, 8- lawType
-	//9- lawSupp, 10- decisionType
-	return ok();
+    public static Result facet(String caseCite, String facetRequest) throws Exception{
+	//facetRequest is a comma separated list (no spaces)  of fields which correspond to columns in the supremeCourtData.csv.
+	FacetSimilar similar = new FacetSimilar();
+	List<String> courtIds = similar.getSimilarCases(caseCite, facetRequest);
+	PageRank pageRankUtil = new PageRank();
+	List<String> pageRanks = pageRankUtil.getPageRanks(courtIds);
+
+	//Build result:
+	JSONObject mainObject = new JSONObject();
+	JSONArray jsonArray = new JSONArray();
+	for(int i=0; i < courtIds.size(); i++){
+		JSONObject temp = new JSONObject();
+		temp.put("courtId", courtIds.get(i));
+		temp.put("pageRank", pageRanks.get(i));
+		jsonArray.put(temp);			
+	}
+	
+	mainObject.put("similarCases", jsonArray);
+	return ok(mainObject.toString());
     }
     
 
@@ -154,6 +170,7 @@ public class Application extends Controller {
     }
     
     public static Result caseInfo(String caseCite) throws Exception{
+	
 	return badRequest("deprecated route");
 	/*
 	System.out.println("Getting info for caseCite: " + caseCite);	
