@@ -29,7 +29,8 @@ public class FacetSimilar{
 				List<String> valuesForCase = getDataFromLine(line, facetList);
 				System.out.println("Values for case: " + valuesForCase.toString());
 				//Now we look for other lines which match the values for this case for the given facetList.
-				List<String> result = lookForOtherCases(valuesForCase, facetList);
+				String courtId = data[53]; 
+				List<String> result = lookForOtherCases(valuesForCase, courtId, facetList);
 				return result;
 			}
 		}
@@ -38,7 +39,7 @@ public class FacetSimilar{
 		return null;
 	}
 	
-	private static List<String> lookForOtherCases(List<String> valuesForCase, List<Integer> facetList) throws Exception{
+	private static List<String> lookForOtherCases(List<String> valuesForCase, String courtIdForGivenCase,  List<Integer> facetList) throws Exception{
 		//Read CSV. Extract line. Split line on comma regex. 
 		//array[every value in facet list] must match every value in valuesForCase.
 		
@@ -71,7 +72,9 @@ public class FacetSimilar{
 				//If we come out of the loop with flag as true, place the courtId in the result list and read another line!
 				if(flag){
 					//Match! Place courtId into result. 
-					resultList.add(courtId);
+					if(!courtId.equals(courtIdForGivenCase)){
+						resultList.add(courtId);
+					}
 				}	
 			}
 		}
