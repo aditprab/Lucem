@@ -3,6 +3,7 @@ var states = [];
 var maxResults = 5;
 
 function loadingAnimation(insertSelector) {
+    console.log(insertSelector);
     $(insertSelector).prepend(
         $('<div/>').append(
             $('<div/>').attr('id', 'loading-inner')
@@ -120,12 +121,14 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                 // console.log(nodeMap.length);
                 $("#vis").find("svg").remove();
                 var nodes = buildGraph(selectedCase, documents, initialCount);
+                removeLoadingAnimation();
             },
             error: function(error) {
                 updateResults(documents);
                 $("#pagination").css("display", "block");
                 $("#vis").find("svg").remove();
                 var nodes = buildGraph(selectedCase, documents, documents.length);
+                removeLoadingAnimation();
             }
         });
     }
@@ -207,6 +210,7 @@ function citationHandler() {
     data = cleanCSL(data);
     console.log(data);
     var documents = [];
+    loadingAnimation("#vis");
     getDocuments(data, documents, 1, 2, selectedCase);
 }
 
@@ -228,6 +232,7 @@ function similarityHandler() {
         absolute_url: $("#header-title").text() + "/",
         content: $("#view-doc").data("content")
     };
+    loadingAnimation("#vis");
     $.ajax({
         url: url,
         type: "GET",
@@ -260,6 +265,7 @@ function similarityHandler() {
                     for(var i = 0; i < docs.length; i++) 
                         docs[i].score = simScores[i].score;
                     console.log(obj.documents);
+                    removeLoadingAnimation();
                     buildSimVis(selectedCase, obj.documents);
                     updateResults(docs);
                 }
@@ -294,6 +300,7 @@ function facetSelectHandler() {
             facetRequest += ",";
     }
     data += caseCite + facetRequest;
+    loadingAnimation("#vis");
     $.ajax({
         url: url,
         type: "GET",
@@ -324,6 +331,7 @@ function facetSelectHandler() {
                     var docs = JSON.parse(response).documents;
                     //console.log(docs);
                     $("#vis").find("svg").remove();
+                    removeLoadingAnimation();
                     showScatterPlot(docs);
                     updateResults(docs);
                 }
