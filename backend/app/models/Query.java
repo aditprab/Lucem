@@ -20,7 +20,7 @@ public class Query{
 
 		List<Integer> ranked = new ArrayList<Integer>();
 		query = query.replaceAll("\\s", "+");
-		String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid+id&rows=50&wt=json";
+		String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid+id&rows=50&wt=json&hl=true&hl.fl=html*_txt_en&hl.snippets=5";
 //Old endpoint (doesn't return Solr's internal doc id) String endpoint = "http://52.36.127.109:8983/solr/gettingstarted_shard1_replica2/select?q=" + query + "&fl=score%2C+courtid&rows=50&wt=json";
 		System.out.println("Solr endpoint queried: " + endpoint);
 		URL url = new URL(endpoint);

@@ -39,5 +39,13 @@ public class PageRank{
             }
         }
 	
+	public static List<String> getPageRanks(List<String> courtIds){
+		List<String> pageRanks = new ArrayList<String>();
+		for(int i=0; i < courtIds.size(); i++){
+			String result = getPageRank(courtIds.get(i));
+			pageRanks.add(result);
+		}
 
+		return pageRanks;
+	}
 }
