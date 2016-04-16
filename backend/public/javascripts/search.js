@@ -2,6 +2,19 @@ var documents = [];
 var states = [];
 var maxResults = 5;
 
+function loadingAnimation(insertSelector) {
+    $(insertSelector).prepend(
+        $('<div/>').append(
+            $('<div/>').attr('id', 'loading-inner')
+                       .addClass('center-vertical')
+        ).attr('id', 'loading')
+    );
+}
+
+function removeLoadingAnimation() {
+    $('#loading').remove();
+}
+
 function cleanCitations(citations) {
     var ids = [];
     if(citations == null)
@@ -78,8 +91,10 @@ function viewHandler() {
     // createModal depends on the inclusion of modal.js and modal.css
     // to function properly
     createModal('95%', '95vh');
-    $("#modal-container").load('/assets/html/document.html', function() {
-      doc_init(id, html);
+    loadingAnimation('#modal-container');
+    $.get('/assets/html/document.html', function(data) {
+        $('#modal-container').append(data);
+        doc_init(id, html, removeLoadingAnimation);
     });
 }
 
