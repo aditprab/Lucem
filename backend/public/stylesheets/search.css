@@ -296,6 +296,12 @@
         text-align: center;
     }
     
+    #facet-select button {
+        display: block;
+        margin: 0 auto;
+        margin-top: 10px;
+    }
+    
     label, input[type="checkbox"] {
         cursor: pointer;
     }

@@ -1,6 +1,6 @@
 var documents = []; 
 var states = [];
-var maxResults = 5;
+var maxResults = 8;
 
 function loadingAnimation(insertSelector) {
     console.log(insertSelector);
@@ -334,8 +334,18 @@ function facetSelectHandler() {
                     removeLoadingAnimation();
                     showScatterPlot(docs);
                     updateResults(docs);
+                },
+                error: function(error) {
+                    removeLoadingAnimation();
+                    $("#vis").find("svg").remove();
+                    updateResults("No cases found");
                 }
             });
+        },
+        error: function(error) {
+            removeLoadingAnimation();
+            $("#vis").find("svg").remove();
+            updateResults("No cases found");
         }
     });
 }
@@ -413,7 +423,7 @@ function nodeHandler() {
     var height = menu.height();
     $("#menu").css({
         display: "block",
-        top: graph.y - (height + graph.radius),
+        top: graph.y - (height + (graph.radius/2)),
         left: graph.x - width/2
     });
 }
@@ -641,7 +651,7 @@ $(document).ready(function(){
     $("#view-doc").click(viewHandler);
     $(".prev-button").click(pageHandler);
     $(".next-button").click(pageHandler);
-    $("#facet-select").find("input[type=checkbox]").click(facetSelectHandler);
+    $("#facet-select").find("button").click(facetSelectHandler);
        
     $("#menu").find(".glyphicon").click(function() {
         $("#menu").css("display", "none");

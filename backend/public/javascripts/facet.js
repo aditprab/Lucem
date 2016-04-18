@@ -147,6 +147,7 @@ function showScatterPlot(data) {
     
     var width = $("#vis").width();
     var height = 350;
+    var radius = 15;
 
 	var conservative = "#d62728";
 	var liberal = "#1f77b4";
@@ -194,16 +195,42 @@ function showScatterPlot(data) {
     
      var node = svg.selectAll("g.node").data(data);
 
-	 var nodeGroup = node.enter().append("g").attr("class", "node")
+	 var nodeGroup = node.enter().append("g")
+        .attr("class", "node")
         .attr('transform', function (d, i) {
             var random = Math.floor((Math.random() * 10) + 1);
-            return "translate(" + x(getYear(d.date)) + "," + y(random) + ")";
-        });
+            var year = getYear(d.date);
+            $(this).data("graph", {
+                    x: x(year),
+                    y: y(random),
+                    radius: radius
+            });
+            $(this).click(nodeHandler);
+            return "translate(" + x(year) + "," + y(random) + ")";
+        })
 
 	nodeGroup.append("circle")
-       .attr("r", function (d) {
-	        return 15;
-        })
+       .attr({
+           r: function (d) {
+	            return radius;
+            },
+            class: function(d, i) {
+                $(this).data("docInfo", {
+                    title: getTitle(d.absolute_url),
+                    content: d.html,
+                    citations: cleanCitations(d.opinions_cited),
+                    id: getId(d.resource_uri),
+                    caseCite: d.caseCite,
+                    date: d.date,
+                    issue: d.issue,
+                    respondent: d.respondent,
+                    chiefJustice: d.chiefJustice,
+                    issueArea: d.issueArea,
+                    petitioner: d.petitioner
+                });
+                return "group-" + i;
+            }
+       })
         .attr("class", "dot")
             .style("fill", function (d) {
                 if(d.decisionType == 1)
