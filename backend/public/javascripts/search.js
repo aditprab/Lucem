@@ -308,6 +308,7 @@ function facetHandler() {
     $("#results").html("");
     $("#vis").find("svg").html("");
     $("#pagination").css("display", "none");
+    $("#menu").css("display", "none");
 }
 
 function facetSelectHandler() {
