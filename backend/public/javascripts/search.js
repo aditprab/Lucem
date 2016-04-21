@@ -432,7 +432,7 @@ function nodeHandler() {
     var graph = $(this).data("graph");
     var menu = $("#menu");
     var attrs = menu.find("ul");
-    var link = menu.find(".menu-title");
+    var link = menu.find(".title");
 
     link.data("content", caseInfo.content);
     link.data("id", caseInfo.id);
@@ -726,7 +726,6 @@ function showChildren(currentDoc, docs) {
     
 $(document).ready(function(){
     
-    $(".menu-title").click(viewHandler);
     $(".back").click(backHandler);
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);
@@ -739,6 +738,8 @@ $(document).ready(function(){
     $(".citations").click(optionHandler);
     $(".similarity").click(optionHandler);
     $(".facets").click(optionHandler);
+    
+    $("#menu").find(".title").click(viewHandler);
 
     $("#menu").find(".glyphicon").click(function() {
         $("#menu").css("display", "none");
