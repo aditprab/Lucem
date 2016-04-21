@@ -48,7 +48,7 @@ function resultHandler() {
     var url = '/document';
     var obj = { 'docID':$(this).data("id") };
 
-    saveState();
+    //saveState();
 
     // add document to history, even if the user doesn't
     // view it, because its part of the rationale/breadcrumb
@@ -64,26 +64,26 @@ function resultHandler() {
         }
     });
 
-    $("#citations").removeClass(".selected");
-    var title = $(this).find("h3").text();
-    if($("#case-header").css("display") == "none") {
-        $("#case-header").css({
-            top: $("#nav-container").css("height"),
-            display: "block"
-        });
-    }
-    $("#header-title").html(title);
-    //console.log($(this).data("citations"));
-    // $("#results").toggleClass("loading");
-    $("#citations").data("ids", $(this).data("citations"));
-    $("#citations").data("page", 0);
-    $("#similarity").data("id", $(this).data("id"));
-    $("#view-doc").data("id", $(this).data("id"));
-    $("#facets").data("caseCite", $(this).data("caseCite"));
-    $("#view-doc").data("content", $(this).data("content"));
-    if($("#citations").hasClass("selected"))
-        $("#citations").removeClass("selected");
-    $("#citations").click();
+    // $("#citations").removeClass(".selected");
+    // var title = $(this).find("h3").text();
+    // if($("#case-header").css("display") == "none") {
+    //     $("#case-header").css({
+    //         top: $("#nav-container").css("height"),
+    //         display: "block"
+    //     });
+    // }
+    // $("#header-title").html(title);
+    // //console.log($(this).data("citations"));
+    // // $("#results").toggleClass("loading");
+    // $("#citations").data("ids", $(this).data("citations"));
+    // $("#citations").data("page", 0);
+    // $("#similarity").data("id", $(this).data("id"));
+    // $("#view-doc").data("id", $(this).data("id"));
+    // $("#facets").data("caseCite", $(this).data("caseCite"));
+    // $("#view-doc").data("content", $(this).data("content"));
+    // if($("#citations").hasClass("selected"))
+    //     $("#citations").removeClass("selected");
+    // $("#citations").click();
 }
 
 function viewHandler() {
@@ -170,14 +170,34 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
     }
 }
 
+function showHeader(result) {
+    console.log("HEADER:")
+    console.log(result.find(".citations").data());
+    if($("#case-header").css("display") == "none") {
+        $("#case-header").css({
+            top: $("#nav-container").css("height"),
+            display: "block"
+        });
+    }
+    $("#header-title").html(result.find(".title").find("h3").text());
+    // console.log(result.find(".title").find("h3").text());
+    //console.log($(this).data("citations"));
+    // $("#results").toggleClass("loading");
+    $("#citations").data("ids", result.find(".citations").data("ids"));
+    $("#citations").data("page", 0);
+    $("#similarity").data("id", result.find(".similarity").data("id"));
+    $("#view-doc").data("id", result.find(".title").data("id"));
+    $("#facets").data("caseCite", result.find(".facets").data("caseCite"));
+    $("#view-doc").data("content", result.find(".title").data("content"));
+}
+
 function citationHandler() {
     if($(this).hasClass("selected"))
         return;
+    // showHeader($(this).parent().parent());
     $(".selected").removeClass("selected");
     $("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    if($(this).data("page") == 0)
-        clearPage();
     $("#menu").css("display", "none");
     var data = "";
     var selectedCase = {
@@ -221,10 +241,11 @@ function similarityHandler() {
     $(".selected").removeClass("selected");
     //$("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    clearPage();
+    // clearPage();
     $("#citations").data("page", 0);
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
+    $("#facet-select").css("display", "none");
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
     console.log(field);
@@ -279,11 +300,14 @@ function facetHandler() {
         return;
     $(".selected").removeClass("selected");
     $(this).addClass("selected");
-    clearPage();
+    // clearPage();
     $("#facet-select").css({
         display: "initial",
         top: $("#nav-container").css("height")
     });
+    $("#results").html("");
+    $("#vis").find("svg").html("");
+    $("#pagination").css("display", "none");
 }
 
 function facetSelectHandler() {
@@ -407,18 +431,21 @@ function nodeHandler() {
     var graph = $(this).data("graph");
     var menu = $("#menu");
     var attrs = menu.find("ul");
-    var link = menu.find("a");
+    var link = menu.find(".menu-title");
+
     link.data("content", caseInfo.content);
-    link.data("citations", caseInfo.citations);
     link.data("id", caseInfo.id);
+    menu.find(".citations").data("ids", caseInfo.citations);
+    menu.find(".similarity").data("id", caseInfo.id);
+    menu.find(".facets").data("caseCite", caseInfo.caseCite);
     menu.find("h3").html(caseInfo.title);
     attrs.html("");
-    attrs.append($("<li>").html("Date: " + caseInfo.date));
-    attrs.append($("<li>").html("Issue: " + caseInfo.issue));
-    attrs.append($("<li>").html("Respondent: " + caseInfo.respondent));
-    attrs.append($("<li>").html("Chief Justice: " + caseInfo.chiefJustice));
-    attrs.append($("<li>").html("Issue Area: " + caseInfo.issueArea));
-    attrs.append($("<li>").html("Petitioner: " + caseInfo.petitioner));
+    attrs.append($("<li>").html("Date: " + (caseInfo.date == "null" ? "N/A" : caseInfo.date)));
+    attrs.append($("<li>").html("Respondent: " + (caseInfo.respondent == "null" ? "N/A" : caseInfo.respondent)));
+    attrs.append($("<li>").html("Issue: " + (caseInfo.issue == "null" ? "N/A" : caseInfo.issue)));
+    attrs.append($("<li>").html("Chief Justice: " + (caseInfo.chiefJustice == "null" ? "N/A" : caseInfo.chiefJustice)));
+    attrs.append($("<li>").html("Issue Area: " + (caseInfo.issueArea == "null" ? "N/A" : caseInfo.issueArea)));
+    attrs.append($("<li>").html("Petitioner: " + (caseInfo.petitioner == "null" ? "N/A" : caseInfo.petitioner)));
     var width = menu.width();
     var height = menu.height();
     $("#menu").css({
@@ -435,6 +462,28 @@ function clearPage() {
     $("#vis").find("svg").remove();
     $("#facet-select").css("display", "none");
     $("#facet-select").find("input").prop("checked", false);
+}
+
+function optionHandler() {
+    saveState();
+    showHeader($(this).parent().parent());
+    switch($(this).attr("class")) {
+        case "citations":
+            if($("#citations").hasClass("selected"))
+                $("#citations").toggleClass("selected");
+            $("#citations").click();
+            break;
+        case "similarity":
+            if($("#similarity").hasClass("selected"))
+                $("#similarity").toggleClass("selected");
+            $("#similarity").click();
+            break;
+        case "facets":
+            if($("#facets").hasClass("selected"))
+                $("#facets").toggleClass("selected");
+            $("#facets").click();
+            break;
+    }
 }
 
 function searchHandler() {
@@ -489,24 +538,35 @@ function searchHandler() {
 }
    
 function attachHandlers() {
-    $(".title").click(resultHandler);
-    $(".title").mouseover(function() {
+    //$(".title").click(resultHandler);
+    $("#results").find(".title").click(viewHandler);
+    $("#results").find(".title").mouseover(function() {
         var target = "." + $(this).attr("class").split(" ")[1];
         //console.log($("circle" + target).attr("class"));
         $("circle" + target).attr({
-            fill: "red"
+            stroke: "#cca300",
+            "stroke-width": "5",
+            //fill: "white"
         });
     });
     
-    $(".title").mouseleave(function() {
+    $("#results").find(".title").mouseleave(function() {
         var target = "." + $(this).attr("class").split(" ")[1];
         $("circle" + target).attr({
-            fill: "blue"
+            stroke: "black",
+            "stroke-width": "1",
+            fill: "black"
         });
     });
+    
+    $("#results").find(".citations").click(optionHandler);
+    $("#results").find(".similarity").click(optionHandler);
+    $("#results").find(".facets").click(optionHandler);
 }
 
 function saveState() {
+    console.log("saving state");
+    console.log($("body").find("#loading").html());
     states.push($("body").clone(true));
     // var data = [];
     // var results = $("body").find(".result");
@@ -544,11 +604,13 @@ function buildResult(doc, index) {
     var link = $("<a>");
     var showCitations = $("<a>");
     var similarity = $("<a>");
+    var facet = $("<a>");
     var facets = $("<a>");
     var options = $("<div>");
     var snippet = $("<div>");
+    var snippetBuff = $("<div>").append(content);
     var attrs = $("<ul>");
-        
+                
     // Set up title
     title.html(caseTitle);
     title.attr("class", "group-" + index);
@@ -561,32 +623,51 @@ function buildResult(doc, index) {
     link.html(title);
     link.attr("class", "title group-" + (index + 1));
 
+    // data associated with header
+    options.data("title", caseTitle);    
     
     // Citation link
-    showCitations.data("target", index);
-    //showCitations.data("ids", ids);
+    showCitations.data("ids", ids);
+    showCitations.data("page", 0);
     showCitations.attr("class", "citations");
     showCitations.html("Show Citations");
     
     // Similarity link
     similarity.data("id", id);
     similarity.attr("class", "similarity");
-    similarity.html("Show Similar");
+    similarity.html("Similar content");
+    
+    // Facet link
+    facet.data("caseCite", caseCite);
+    facet.attr("class", "facets");
+    facet.html("Similar attributes");
     
     // Snippet 
-    snippet.html("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed dignissim libero. Phasellus sed enim ac eros accumsan vestibulum eu quis lacus. Proin condimentum rutrum neque, et molestie orci aliquam.");
+    //snippet.html("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed dignissim libero. Phasellus sed enim ac eros accumsan vestibulum eu quis lacus. Proin condimentum rutrum neque, et molestie orci aliquam.");
+    var snippetHtml = snippetBuff.find("#p1").find("p").html();
+    var message = "";
+    var buff = [];
+    if(snippetHtml != undefined)
+        buff = snippetHtml.split(" ", 50);
+    for(var i = 0; i < buff.length; i++) {
+        message += buff[i];
+        if(i < buff.length - 1)
+            message += " ";
+    }
+    snippet.html(message);
+    snippet.attr("class", "snippet");
     
     // attrs
-    attrs.append($("<li>").html("Date: " + doc.date));
-    attrs.append($("<li>").html("Issue: " + doc.issue));
-    attrs.append($("<li>").html("Respondent: " + doc.respondent));
-    attrs.append($("<li>").html("Chief Justice: " + doc.chiefJustice));
-    attrs.append($("<li>").html("Issue Area: " + doc.issueArea));
-    attrs.append($("<li>").html("Petitioner: " + doc.petitioner));
+    attrs.append($("<li>").html("Date: " + (doc.date == "null" ? "N/A" : doc.date)));
+    attrs.append($("<li>").html("Respondent: " + (doc.respondent == "null" ? "N/A" : doc.respondent)));
+    attrs.append($("<li>").html("Issue: " + (doc.issue == "null" ? "N/A" : doc.issue)));
+    attrs.append($("<li>").html("Chief Justice: " + (doc.chiefJustice == "null" ? "N/A" : doc.chiefJustice)));
+    attrs.append($("<li>").html("Issue Area: " + (doc.issueArea == "null" ? "N/A" : doc.issueArea)));
+    attrs.append($("<li>").html("Petitioner: " + (doc.petitioner == "null" ? "N/A" : doc.petitioner)));
     attrs.attr("class", "info");
     
     // Append everything to result
-    //options.append(showCitations, similarity);
+    options.append(showCitations, similarity, facet);
     options.append(snippet, attrs);
     options.attr("class", "options");
     result.append(link);
@@ -602,6 +683,7 @@ function updateResults(docs) {
         message.html(docs);
         $("#results").append(message);
         $("#vis").find("svg").remove();
+        removeLoadingAnimation();
         return;
     }
     var data = [];
@@ -643,7 +725,7 @@ function showChildren(currentDoc, docs) {
     
 $(document).ready(function(){
     
-    $(".menu-title").click(resultHandler);
+    $(".menu-title").click(viewHandler);
     $(".back").click(backHandler);
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);
@@ -652,7 +734,11 @@ $(document).ready(function(){
     $(".prev-button").click(pageHandler);
     $(".next-button").click(pageHandler);
     $("#facet-select").find("button").click(facetSelectHandler);
-       
+    
+    $(".citations").click(optionHandler);
+    $(".similarity").click(optionHandler);
+    $(".facets").click(optionHandler);
+
     $("#menu").find(".glyphicon").click(function() {
         $("#menu").css("display", "none");
     });
@@ -662,6 +748,14 @@ $(document).ready(function(){
     $(".node").click(function() {
         console.log($(this).data("graph")); 
     });
+    
+    // $(document).scroll(function() {
+    //    console.log($(window).height()); 
+    // });
+    
+    // $(window).resize(function() {
+    //     console.log($("body").scrollHeight);
+    // });
     
     // $("#search").submit(function() {
     //     $("#img-container").css("display", "none");

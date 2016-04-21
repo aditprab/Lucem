@@ -149,7 +149,12 @@
     #results > div {
         margin: 0 10%;
         padding: 20px 0;
+        padding-bottom: 0;
         overflow: hidden;
+    }
+    
+    .snippet {
+        margin: 10px 0;
     }
    
     .title {

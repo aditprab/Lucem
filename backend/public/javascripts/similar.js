@@ -85,7 +85,7 @@ function buildSimVis(selectedCase, nodes) {
             score: nodes[i].score,
             date: nodes[i].date,
             issue: nodes[i].issue,
-            respondant: nodes[i].respondant,
+            respondent: nodes[i].respondent,
             chiefJustice: nodes[i].chiefJustice,
             issueArea: nodes[i].issueArea,
             petitioner: nodes[i].petitioner

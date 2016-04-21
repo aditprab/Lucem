@@ -78,7 +78,7 @@ $(document).ready(function() {
 });
 
 var width = $("#vis").width();
-var height = 800;
+var height = 2000;
 var radius = 15;
 var linkDistance = 50;
 
@@ -126,7 +126,7 @@ function buildGraph(selectedCase, nodes, count) {
             caseCite: nodes[i].caseCite,
             date: nodes[i].date,
             issue: nodes[i].issue,
-            respondant: nodes[i].respondant,
+            respondent: nodes[i].respondent,
             chiefJustice: nodes[i].chiefJustice,
             issueArea: nodes[i].issueArea,
             petitioner: nodes[i].petitioner,
@@ -248,7 +248,7 @@ function buildGraph(selectedCase, nodes, count) {
                     citations: cleanCitations(d.opinions_cited),
                     id: getId(d.resource_uri),
                     caseCite: d.caseCite,
-                    date: d.data,
+                    date: d.date,
                     issue: d.issue,
                     respondent: d.respondent,
                     chiefJustice: d.chiefJustice,
@@ -267,24 +267,24 @@ function buildGraph(selectedCase, nodes, count) {
         //     return "translate(0," + -d.radius + ")"
         // })
         .attr({
-            visibility: "",
+            visibility: "hidden",
             fill: "white",
             "text-anchor": "middle"
         });
     
-    nodeGroup
-        .on("click", function(d, i) {
-            $("#document").html(d.content);
-            //console.log(d.content);
-        })
-        .on("mouseover", function(d, i) {
-            //d3.select(this).select("text").attr("visibility", "");
-            d3.select(this).select("circle").attr("fill", "red");
-        })
-        .on("mouseout", function(d, i) {
-            //d3.select(this).select("text").attr("visibility", "hidden");
-            d3.select(this).select("circle").attr("fill", "black");
-        });
+    // nodeGroup
+    //     .on("click", function(d, i) {
+    //         $("#document").html(d.content);
+    //         //console.log(d.content);
+    //     })
+    //     .on("mouseover", function(d, i) {
+    //         //d3.select(this).select("text").attr("visibility", "");
+    //         d3.select(this).select("circle").attr("fill", "red");
+    //     })
+    //     .on("mouseout", function(d, i) {
+    //         //d3.select(this).select("text").attr("visibility", "hidden");
+    //         d3.select(this).select("circle").attr("fill", "black");
+    //     });
     
     // node.on("click", function(d, i) {
     //     var menu = $("#menu");
