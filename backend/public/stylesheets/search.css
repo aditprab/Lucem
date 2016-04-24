@@ -143,7 +143,9 @@
     #vis {
         width: 65%;
         float: left;
-        position: relative;
+        position: fixed;
+        /*background-color: navy;*/
+        left: 35%;
     }
     
     #results > div {
@@ -187,6 +189,7 @@
         position: relative;
         display: none;
         margin-bottom: 20px;
+        overflow: auto;
     }
     
     #header-title {

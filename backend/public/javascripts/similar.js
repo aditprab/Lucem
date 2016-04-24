@@ -108,8 +108,8 @@ function buildSimVis(selectedCase, nodes) {
         
      var container = d3.select("#vis").append("svg")
         .attr({
-            width: width,
-            height: height
+            width: "100%",
+            height: "100%"
         });
         
     var force  = d3.layout.force()
@@ -178,7 +178,12 @@ function buildSimVis(selectedCase, nodes) {
             return "translate(0," + -d.radius + ")"
         })
         .attr("visibility", "hidden");*/
-        
+    
+    var minX;
+    var minY; 
+    var maxX;
+    var maxY;
+    
     force.on("tick", function() {
         // Code snippet from https://bl.ocks.org/mbostock/3231298
         var q = d3.geom.quadtree(data),
@@ -188,12 +193,27 @@ function buildSimVis(selectedCase, nodes) {
         while (++i < n) q.visit(collide(data[i]));
         // End code snippet
         nodeGroup.attr({
-            transform: function(d) {
+            transform: function(d, i) {
                 $(this).data("graph", {
                     x: d.x,
                     y: d.y,
                     radius: d.radius
                 });
+                if(i == 0) {
+                    minX = d.x;
+                    minY = d.y;
+                    maxX = d.x;
+                    maxY = d.y;
+                }
+                if(d.x < minX)
+                    minX = d.x;
+                else if(d.x > maxX)
+                    maxX = d.x;
+                if(d.x < minY)
+                    minY = d.y;
+                else if(d.y > maxY)
+                    maxY = d.y;
+                container.attr("viewBox", 0 + " " + (minY * 0.3) + " " + (maxX * 1.2) + " " + (maxY * 1.2));
                 return "translate(" + [d.x, d.y] + ")";
             }
         });

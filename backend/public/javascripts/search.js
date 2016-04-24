@@ -194,11 +194,14 @@ function showHeader(result) {
 function citationHandler() {
     if($(this).hasClass("selected"))
         return;
-    // showHeader($(this).parent().parent());
+    // set up header and positions
     $(".selected").removeClass("selected");
     $("#facet-select").css("display", "none");
+    placeVis();
+    adjustVis();
     $(this).addClass("selected");
     $("#menu").css("display", "none");
+    
     var data = "";
     var selectedCase = {
         absolute_url: $("#header-title").text() + "/",
@@ -237,15 +240,14 @@ function citationHandler() {
 function similarityHandler() {
     if($(this).hasClass("selected"))
         return;
-    //saveState();
     $(".selected").removeClass("selected");
-    //$("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    // clearPage();
     $("#citations").data("page", 0);
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
     $("#facet-select").css("display", "none");
+    placeVis();
+    adjustVis();
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
     console.log(field);
@@ -300,7 +302,6 @@ function facetHandler() {
         return;
     $(".selected").removeClass("selected");
     $(this).addClass("selected");
-    // clearPage();
     $("#facet-select").css({
         display: "initial",
         top: $("#nav-container").css("height")
@@ -309,6 +310,8 @@ function facetHandler() {
     $("#vis").find("svg").html("");
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
+    placeVis();
+    adjustVis();
 }
 
 function facetSelectHandler() {
@@ -405,7 +408,8 @@ function backHandler() {
     var state = states.pop();
     //$("body").html(state.content);
     $("body").remove();
-    $("html").append(state);
+    $("html").append(state.body);
+    $(document).scrollTop(state.scrollPosition);
     console.log(state);
     // var results = $("body").find(".result");
     // for(var i = 0; i < results.length; i++) {
@@ -568,7 +572,10 @@ function attachHandlers() {
 function saveState() {
     console.log("saving state");
     console.log($("body").find("#loading").html());
-    states.push($("body").clone(true));
+    states.push({
+        body: $("body").clone(true),
+        scrollPosition: $(document).scrollTop()
+    });
     // var data = [];
     // var results = $("body").find(".result");
     // for(var i = 0; i < results.length; i++) {
@@ -722,7 +729,31 @@ function showChildren(currentDoc, docs) {
     }
     return list;
 }
-    
+
+function placeVis() {
+    $("#vis").css({
+        top: $("#case-header").height() + $("#nav-container").outerHeight(),
+        height: window.innerHeight - $("#case-header").height()
+    });
+    $("#vis").data({
+        top: parseInt($("#vis").css("top")),
+        height: $("#vis").height()
+    });
+}
+
+function adjustVis() {
+    var top = $("#vis").data("top") - ($(document).scrollTop());
+    //console.log($(document).scrollTop());
+    console.log(top);
+    if(top > 0) {
+        $("#vis").css("top", top);
+        $("#vis").css("height", $("#vis").data("height") + $(document).scrollTop());
+    }
+    else {
+        $("#vis").css("top", 0);
+        $("#vis").css("height", $("#vis").data("height") + $("#vis").data("top"));
+    }
+}
     
 $(document).ready(function(){
     
@@ -751,13 +782,32 @@ $(document).ready(function(){
         console.log($(this).data("graph")); 
     });
     
-    // $(document).scroll(function() {
-    //    console.log($(window).height()); 
-    // });
+    $(document).scroll(function() {
+        adjustVis();
+    });
     
-    // $(window).resize(function() {
-    //     console.log($("body").scrollHeight);
-    // });
+    $("#vis").css({
+        height: $("#case-header").height()
+    });
+    
+    /* !!!!!!!!
+     * still buggy 
+     * !!!!!!!!
+     */
+    $(window).resize(function() {
+        // $("#vis").find("svg")[0].setAttribute("viewBox", "0 0 " + ($("#vis").width()) + " " + (2* window.innerHeight));
+        console.log(window.innerHeight);
+        // placeVis();
+        // adjustVis();
+        if(parseInt($("#vis").css("top")) > 0)
+            $("#vis").height(window.innerHeight - parseInt($("#vis").css("top")));
+        else
+            $("#vis").height(window.innerHeight);
+        $("#vis").data({
+            height: $("#vis").height(),
+            // top: parseInt($("#vis").css("top"))
+        });
+    });
     
     // $("#search").submit(function() {
     //     $("#img-container").css("display", "none");

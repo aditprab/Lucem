@@ -78,7 +78,7 @@ $(document).ready(function() {
 });
 
 var width = $("#vis").width();
-var height = 2000;
+var height = window.innerHeight;
 var radius = 15;
 var linkDistance = 50;
 
@@ -88,9 +88,9 @@ function buildGraph(selectedCase, nodes, count) {
     //console.log(nodes.length);
     var data = [
         {
-            fixed: false,
+            fixed: true,
             radius: 20,
-            x: 20,
+            x: width/2,
             y: height/2,
             group: 0,
             color: "#cca300",
@@ -200,8 +200,10 @@ function buildGraph(selectedCase, nodes, count) {
     
     var container = d3.select("#vis").append("svg")
         .attr({
-            width: width,
-            height: height
+            width: "100%",
+            height: "100%",
+            // viewBox: "0 0 " + (width) + " " + (2* window.innerHeight),
+            // perserveAspectRatio: "xMinYMin"
         });
         
     var force  = d3.layout.force()
@@ -311,6 +313,11 @@ function buildGraph(selectedCase, nodes, count) {
         
     // });
     
+    var minX;
+    var minY; 
+    var maxX;
+    var maxY;
+    
     force.on("tick", function() {
         // Code snippet from https://bl.ocks.org/mbostock/3231298
         var q = d3.geom.quadtree(data),
@@ -327,12 +334,31 @@ function buildGraph(selectedCase, nodes, count) {
             cy: function(d) {
                 return d.y;
             }*/
-            transform: function(d) {
+            transform: function(d, i) {
                 $(this).data("graph", {
                     x: d.x,
                     y: d.y,
                     radius: d.radius
                 });
+                if(i == 0) {
+                    minX = d.x;
+                    minY = d.y;
+                    maxX = d.x;
+                    maxY = d.y;
+                }
+                if(d.x < minX)
+                    minX = d.x;
+                else if(d.x > maxX)
+                    maxX = d.x;
+                if(d.x < minY)
+                    minY = d.y;
+                else if(d.y > maxY)
+                    maxY = d.y;
+                container.attr("viewBox", 0 + " " + (minY * 0.3) + " " + (maxX * 1.2) + " " + (maxY * 1.2));
+                // container.attr({
+                //     //width: maxX,
+                //     height: maxYs
+                // });
                 return "translate(" + [d.x, d.y] + ")";
             }
         });
@@ -353,6 +379,9 @@ function buildGraph(selectedCase, nodes, count) {
         }); 
     });
     
+    force.on("end", function() {
+       console.log("(" + minX + "," + minY + "), " + "(" + maxX + "," + maxY + ")"); 
+    });
     
     return data;
 }
