@@ -103,6 +103,8 @@ span.num {
    width:38px;
    margin:5px;
    background-color:transparent;
+   background-repeat:no-repeat;
+   background-size:cover;
    -webkit-border-radius: 5px;
    -moz-border-radius: 5px;
    border-radius: 5px;
@@ -110,8 +112,11 @@ span.num {
 }
 #highlight-btn {
    background-image: url("http://www2.psd100.com/ppp/2013/09/2601/chisel-tip-marker-icon-0926020027.png");
-   background-repeat:no-repeat;
-   background-size:auto 100%;
+}
+#save-btn {
+  background-image:url("/assets/images/save.svg");
+  background-size:90% auto;
+  background-position:center;
 }
 a.footnote {
    color:#0066FF;

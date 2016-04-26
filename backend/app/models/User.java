@@ -3,7 +3,9 @@ package models;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import java.security.MessageDigest;
 
@@ -51,8 +53,10 @@ public class User {
 
     // save user to the db
     document = new Document("email", email);
+    document.append("email_lower", email.toLowerCase());
     document.append("password", Base64.getEncoder().encodeToString(hashed));
-    document.append("sessions", new ArrayList<Document>());
+    document.append("sessions", new Document());
+    document.append("sessionIDs", new ArrayList<Integer>());
     save(false);
   }
 
@@ -69,7 +73,7 @@ public class User {
     boolean ret = true;
     MongoConnection mc = new MongoConnection("db.properties");
     MongoCollection<Document> collection = mc.getCollection();
-    if(collection.find(eq("email", Email)).first() == null) { 
+    if(collection.find(eq("email_lower", Email.toLowerCase())).first() == null) { 
       ret = false;
     }
     mc.close();
@@ -81,7 +85,7 @@ public class User {
     MongoConnection mc = new MongoConnection("db.properties");
     MongoCollection<Document> collection = mc.getCollection();
 
-    return new User(collection.find(eq("email", Email)).first());
+    return new User(collection.find(eq("email_lower", Email.toLowerCase())).first());
   }
 
   public static boolean authenticate(String Email, String Password)
@@ -89,7 +93,8 @@ public class User {
     boolean ret = true;
     MongoConnection mc = new MongoConnection("db.properties");
     MongoCollection<Document> collection = mc.getCollection();
-    Document d = collection.find(eq("email", Email)).first();
+    Document d = collection.find(eq("email_lower", Email.toLowerCase())).first();
+
     if(d == null) {
       // user does not exist
       ret = false;
@@ -105,6 +110,7 @@ public class User {
         ret = false;
       }
     }
+
     mc.close();
     return ret;
   }
@@ -125,44 +131,146 @@ public class User {
     mc.close();
   }
 
-  public void addSession(String name, String description, int id) {
-    List<Document> sessions = (List<Document>)document.get("sessions");
-    Document session = new Document("name", name);
-    session.put("description", description);
-    session.put("id", id);
-    session.put("history", new ArrayList<Document>());
-    session.put("documents", new Document());
-    sessions.add(session);
-  }
+  public void addSession(String name, String description, String id) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get("sessionID");
 
-  // untested
-  public void removeSession(long id) {
-    List<Document> sessions = (List<Document>)document.get("sessions");
+    if(session != null) {
+      session.put("name", name);
+      session.put("description", description);
+    } else {
+      session = new Document("name", name);
 
-    for(int i = 0; i < sessions.size(); ++i) {
-      Document session = sessions.get(i);
-      if(id == (long)session.get("id")) {
-        sessions.remove(i);
-        break;
-      }
+      session.put("description", description);
+      session.put("id", id);
+      session.put("history", new ArrayList<String>());
+      session.put("saved", new ArrayList<String>());
+      session.put("documents", new Document());
+      sessions.put(id, session);
     }
   }
 
-  public ArrayNode getSessions() {
-    List<Document> sessions = (ArrayList<Document>)document.get("sessions");
-    ArrayNode result = JsonNodeFactory.instance.arrayNode();
+  public void removeSession(String id) {
+    Document sessions = (Document)document.get("sessions");
+    sessions.remove(id);
+  }
+
+  public JsonNode getSessions() {
+    Document sessions = (Document)document.get("sessions");
+    JsonNode result = JsonNodeFactory.instance.objectNode();
     ObjectMapper om = new ObjectMapper();
     String jsonString = null;
 
-    for(int i = 0; i < sessions.size(); ++i) {
-      Document session = sessions.get(i);
-      String s = null;
+    try {
+      jsonString = sessions.toJson();
+      result = om.readTree(jsonString);
+    } catch(java.io.IOException e) {
+      System.out.println("encountered an IOException in User.getSessions()");
+      e.printStackTrace();
+    }
+
+    return result;
+  }
+
+  // adds document to the document history
+  public void addDocumentToHistory(String sessionID, String documentID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+
+    if(session != null) {
+      List<String> history = (ArrayList<String>)session.get("history");
+
+      if(history.contains(documentID)) {
+        // move document to the front of the list without
+        // duplicating the document
+        history.remove(documentID);
+      }
+
+      history.add(0, documentID);
+    }
+  }
+
+  public ArrayNode getDocumentHistory(String sessionID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+    ArrayNode result = JsonNodeFactory.instance.arrayNode();
+
+    if(session != null) {
+      ArrayList<String> history = (ArrayList<String>)session.get("history");
+
+      for(int i = 0; i < history.size(); ++i) {
+        result.add(history.get(i));
+      }
+    }
+    return result;
+  }
+
+  public ArrayNode getAnnotatedDocuments(String sessionID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+    ArrayNode result = JsonNodeFactory.instance.arrayNode();
+
+    if(session != null) {
+      Document documents = (Document)session.get("documents");
+      Set<String> annotated = documents.keySet();
+      Iterator<String> itr = annotated.iterator();
+
+      while(itr.hasNext()) {
+        result.add(itr.next());
+      }
+    }
+    return result;
+  }
+  public void addHighlight(String sessionID, String documentID, int startIndex,
+                           int stopIndex) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+
+    if(session != null) {
+      Document documents = (Document)session.get("documents");
+      Document document = (Document)documents.get(documentID);
+      Document highlights;
+
+      if(document == null) {
+        document = new Document("id", documentID);
+        document.put("highlights", new Document());
+        documents.put(documentID, document);
+      }
+
+      highlights = (Document)document.get("highlights");
+
+      // to add notes, just create a new document and add stop index as
+      // a key value pair
+      highlights.put(Integer.toString(startIndex), stopIndex);
+    }
+  }
+
+  public JsonNode getHighlights(String sessionID, String documentID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+    JsonNode result = null;
+    ObjectMapper om = new ObjectMapper();
+
+    if(session != null) {
+      Document documents = (Document)session.get("documents");
+      Document document = (Document)documents.get(documentID);
+      Document highlights;
+
+      if(document == null) {
+        return (JsonNode)JsonNodeFactory.instance.objectNode();
+      }
+
+      highlights = (Document)document.get("highlights");
+
+      if(highlights == null || highlights.isEmpty()) {
+        return (JsonNode)JsonNodeFactory.instance.objectNode();
+      }
 
       try {
-        s = session.toJson();
-        result.add(om.readTree(s));
+        String h = highlights.toJson();
+        result = om.readTree(h);
       } catch(java.io.IOException e) {
-        System.out.println("encountered an IOException in User.getSessions()");
+        System.out.println("encountered an IOException in User.getHighlights()");
         e.printStackTrace();
       }
     }
@@ -170,87 +278,56 @@ public class User {
     return result;
   }
 
-  public void addDocument(int sessionID, String documentID) {
-    List<Document> sessions = (ArrayList<Document>)document.get("sessions");
+  public void saveDocument(String sessionID, String documentID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
 
-    for(int i = 0; i < sessions.size(); ++i) {
-      Document session = sessions.get(i);
-      if(session.getInteger("id", -1) == sessionID) {
-        List<String> history = (ArrayList<String>)session.get("history");
-        Document documents = (Document)session.get("documents");
-        Document document = (Document)documents.get(documentID);
+    if(session != null) {
+      List<String> saved = (ArrayList<String>)session.get("saved");
 
-        if(document != null) {
-          // move document to the front of the list without
-          // duplicating the document
-          history.remove(documentID);
-        }
-
-        history.add(0, documentID);
-
-        break;
+      if(!saved.contains(documentID)) {
+        saved.add(0, documentID);
       }
     }
   }
 
-  public void addHighlight(int sessionID, String documentID, int startIndex,
-                           int stopIndex) {
-    List<Document> sessions = (ArrayList<Document>)document.get("sessions");
+  public void unsaveDocument(String sessionID, String documentID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
 
-    for(int i = 0; i < sessions.size(); ++i) {
-      Document session = sessions.get(i);
-      if(session.getInteger("id", -1) == sessionID) {
-        Document documents = (Document)session.get("documents");
-        Document document = (Document)documents.get(documentID);
-        Document highlights;
+    if(session != null) {
+      List<String> saved = (ArrayList<String>)session.get("saved");
 
-        if(document == null) {
-          document = new Document("id", documentID);
-          document.put("highlights", new Document());
-          documents.put(documentID, document);
-        }
-
-        highlights = (Document)document.get("highlights");
-
-        // to add notes, just create a new document and add stop index as
-        // a key value pair
-        highlights.put(Integer.toString(startIndex), stopIndex);
-
-        break;
+      if(saved.contains(documentID)) {
+        saved.remove(documentID);
       }
     }
   }
 
-  public JsonNode getHighlights(int sessionID, String documentID) {
-    List<Document> sessions = (ArrayList<Document>)document.get("sessions");
-    JsonNode result = null;
-    ObjectMapper om = new ObjectMapper();
+  public boolean savedDocument(String sessionID, String documentID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
 
-    for(int i = 0; i < sessions.size(); ++i) {
-      Document session = sessions.get(i);
-      if(session.getInteger("id", -1) == sessionID) {
-        Document documents = (Document)session.get("documents");
-        Document document = (Document)documents.get(documentID);
-        Document highlights;
+    if(session != null) {
+      List<String> saved = (ArrayList<String>)session.get("saved");
 
-        if(document == null) {
-          return (JsonNode)JsonNodeFactory.instance.objectNode();
-        }
+      if(saved.contains(documentID)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-        highlights = (Document)document.get("highlights");
+  public ArrayNode getSavedDocuments(String sessionID) {
+    Document sessions = (Document)document.get("sessions");
+    Document session = (Document)sessions.get(sessionID);
+    ArrayNode result = JsonNodeFactory.instance.arrayNode();
 
-        if(highlights == null || highlights.isEmpty()) {
-          return (JsonNode)JsonNodeFactory.instance.objectNode();
-        }
+    if(session != null) {
+      ArrayList<String> saved = (ArrayList<String>)session.get("saved");
 
-        try {
-          String h = highlights.toJson();
-          result = om.readTree(h);
-        } catch(java.io.IOException e) {
-          System.out.println("encountered an IOException in User.getHighlights()");
-          e.printStackTrace();
-        }
-        break;
+      for(int i = 0; i < saved.size(); ++i) {
+        result.add(saved.get(i));
       }
     }
 

@@ -508,6 +508,7 @@ function attachHandlers() {
 
 function saveState() {
     states.push($("body").clone(true));
+    console.log(JSON.stringify(states));
     // var data = [];
     // var results = $("body").find(".result");
     // for(var i = 0; i < results.length; i++) {

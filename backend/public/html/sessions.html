@@ -2,6 +2,7 @@
 <head>
   <link href="https://fonts.googleapis.com/css?family=Raleway:500,700" rel="stylesheet" type="text/css">
   <link href="/assets/stylesheets/modal.css" rel="stylesheet" type="text/css">
+  <link href="/assets/stylesheets/document.css" rel="stylesheet" type="text/css">
   <style>
     html, body {
       margin:0;
@@ -26,7 +27,6 @@
       background-image:url("/assets/images/Courtroom.jpg");
       background-size:cover;
       background-position: center center;
-      background-size:100% auto;
       background-repeat:no-repeat;
       color:white;
     }
@@ -34,21 +34,30 @@
       margin:0 -5px 0 0;
     }
     #sessions-container {
-      margin:0 1.5% 5% 1.5%;
+      margin:0 20px 5% 20px;
+    }
+    .session-row {
+      max-width:100%;
+      margin:3.5% auto 20px auto;
+      overflow:hidden;
+      height:307px; /* cannot be 305px because the border adds 2px to the height */
     }
     .session-box {
       border:1px solid black;
-      height:305px;
-      width:225px;
-      margin:3.5% 1.5% 0 1.5%;
+      width:225px;  /* total width is 265px */
+      height:305px; 
+      margin-left:20px;
+      margin-right:20px;
       display:inline-block;
+      position:relative; /* to allow action-menu to completely overshadow it */
       vertical-align:top;
       overflow:hidden;
     }
     .session-box:hover {
       cursor:pointer;
     }
-    .session-header-content, .session-description-content {
+    .session-header-content, .session-description-content, 
+    .document {
       padding:0 10%;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -111,17 +120,575 @@
       background-size:100% auto;
       background-repeat:no-repeat;
     }
+    #action-menu {
+      background-color:rgba(28, 28, 40, 0.95);
+      position:absolute;
+      top:0;
+      height:100%;
+      width:100%;
+      color:white;
+      cursor:default;
+    }
+    #action-menu-items {
+      top:45%;
+    }
+    .action-menu-item {
+      width:50%;
+      margin:10px auto;
+      cursor:pointer;
+      text-align:center;
+    }
+    .action-icon {
+      width:100px;
+      height:75px;
+      display:block;
+      margin:0 auto;
+    }
+    .action-label, .info-item-label {
+      font-weight:700;
+    }
+    #session-info-background {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background-color:transparent;
+      z-index:99;
+    }
+    #session-info {
+      width:103%; /* to start div at the edge of the screen, the width needs to be larger than that of enclosing div (sessions-container) */
+      background-color:rgb(28, 28, 40);
+      height:305px;
+      margin:0 -20px; /* to start div at the edge of screen, negate the margin of sessions-container */
+      position:relative;
+      z-index:100;
+    }
+     .tip {
+      position:absolute;
+      top:-20px;
+      left:20px;  /* equal to the negative margin of session-info to start exactly where session-row does */
+      width:0;
+      height:0;
+      border-left:20px solid transparent;
+      border-right:20px solid transparent;
+      border-bottom:20px solid rgb(28, 28, 40);
+    }
+    .info-item {
+      vertical-align:top;
+      display:inline-block;
+      width:21%;
+      margin:0% 2%;
+      cursor:pointer;
+      text-align:center;
+      color:white;
+      top:52%;
+    }
+    .info-item-icon {
+      display:block;
+      width:50%;
+      height:100px;
+      margin:20px auto;
+    }
+    .info-item-label {
+      display:block;
+      width:60%;
+      height:3.5em;
+      margin:0 auto;
+    }
+    #delete {
+      border:2px solid rgba(185,75,75,0.95);
+      background-color:rgba(185,75,75,0.95);
+      color:white;
+    }
+    #empty-msg {
+      color:white;
+      font-size:2.75em;
+      font-weight:700;
+      width:100%;
+      text-align:center;
+    }
+    #documents {
+      width:100%;
+      margin:0 auto;
+    }
+    .document-btn {
+      display:inline-block;
+      padding:0;
+      background-color:white;
+      width:225px;
+      height:75%;
+      margin:0 25px;
+      position:relative;
+      -webkit-box-shadow:10px 10px 35px 10px rgba(0,0,0,0.75);
+      -moz-box-shadow:10px 10px 35px 10px rgba(0,0,0,0.75);
+      box-shadow:10px 10px 35px 10px rgba(0,0,0,0.75);
+      vertical-align:top;
+      cursor:pointer;
+    }
+    .document-name {
+      font-weight:700;
+      width:80%;
+      text-align:center;
+      margin:0 10%;
+    }
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="/assets/javascripts/validate.js"></script>
   <script src="/assets/javascripts/modal.js"></script>
+  <script src="/assets/javascripts/document.js"></script>
+
   <script>
     var maxID = -1;
+    var sessionsCount = 0;
+    var sessionsPerRow;
+    var rowWidth;
+    var moveSessionsUp;
+
+    function getTitle(url) {
+        var buff = url.split("/");
+        var title = buff[buff.length - 2];
+        return title.replace(/-/g, " ");
+    }
+
+    function getId(uri) {
+        var buff = uri.split("/");
+        return buff[buff.length - 2];
+    }
+
+    var clickOutsideActionMenu = function(event) {
+      if($('#action-menu').length == 1 && 
+         $('#session-info').length == 0 &&
+        !$(event.target).is('#session-info-background') &&
+         !$(event.target).is('.clicked, .clicked *') && 
+         !$(event.target).is('#action-menu, #action-menu *')) {
+        $('.clicked').toggleClass("clicked", false);
+        removeActionMenu();
+      }
+    };
+
+    var showEmptyMessage = function() {
+      var div = document.createElement('div');
+
+      div.appendChild(document.createTextNode('No Documents To Show'));
+      div.setAttribute('class', 'uppercase ltr-spacing-sml center-vertical');
+      div.id = 'empty-msg';
+
+      $('#session-info').contents().remove(':not(.tip)');
+      $('#session-info').append(div);
+    }
+
+    function loadingAnimation(insertSelector) {
+        console.log(insertSelector);
+        $(insertSelector).prepend(
+            $('<div/>').append(
+                $('<div/>').attr('id', 'loading-inner')
+                           .addClass('center-vertical')
+            ).attr('id', 'loading')
+        );
+    }
+
+    function removeLoadingAnimation() {
+        $('#loading').remove();
+    }
+
+    var createNewDocumentButton = function(name, data) {
+      var btn = document.createElement('div');
+      var name_div = document.createElement('div');
+
+      name_div.setAttribute('class','document-name uppercase center-vertical');
+      console.log(name);
+      name_div.appendChild(document.createTextNode(name));
+
+      btn.appendChild(name_div);
+      btn.className = 'document-btn';
+
+      $(btn).data("content", data.html);
+      $(btn).data("id", getId(data.resource_uri));
+
+      $(btn).click(function() {
+        var html = $(this).data("content");
+        var id = $(this).data("id");
+
+        // createModal depends on the inclusion of modal.js and modal.css
+        // to function properly
+        createModal('95%', '95vh');
+        loadingAnimation('#modal-container');
+        $.get('/assets/html/document.html', function(data) {
+            $('#modal-container').append(data);
+            doc_init(id, html, removeLoadingAnimation);
+        });
+      });
+
+      $('#documents').append(btn);   
+    }
+
+    var showDocuments = function(json) {
+      var documents = json.documents;
+      var div = document.createElement('div');
+
+      div.className = 'center-vertical';
+      div.id = "documents";
+
+      $('#session-info').contents().remove(':not(.tip)');
+      $('#session-info').append(div);
+
+      for(var i = 0; i < documents.length; ++i) {
+        var doc = documents[i];
+        var title = getTitle(doc.absolute_url);
+
+        createNewDocumentButton(title, doc);
+      }
+    };
+
+    var showSavedDocuments = function(session) {
+      $('#saved').off('click');
+      var sessionID = session.data('sessionID');
+      var url = '/savedDocuments';
+      $.get(url, {'sessionID':sessionID}, function(res) {
+        var docIDs = res.saved;
+
+        $('#saved').click(function() {
+          showSavedDocuments(session);
+        });
+
+        if(docIDs.length == 0) {
+          showEmptyMessage();
+          return;
+        }
+
+        $.ajax({
+          url: "http://52.36.127.109:9000/getDocuments",
+          type: "POST",
+          dataType: "text",
+          data: docIDs.toString(),
+          contentType: "text/plain"
+        }).done(function(data) {
+          showDocuments(JSON.parse(data));
+        });
+      });
+    };
+
+    var showHistory = function(session) {
+      $('#history').off('click');
+      var sessionID = session.data('sessionID');
+      var url = '/documentHistory';
+      $.get(url, {'sessionID':sessionID}, function(res) {
+        var docIDs = res.history;
+
+        console.log(res);
+        $('#history').click(function() {
+          showHistory(session);
+        });
+
+        if(docIDs.length == 0) {
+          showEmptyMessage();
+          return;
+        }
+
+        $.ajax({
+          url: "http://52.36.127.109:9000/getDocuments",
+          type: "POST",
+          dataType: "text",
+          data: docIDs.toString(),
+          contentType: "text/plain"
+        }).done(function(data) {
+          showDocuments(JSON.parse(data));
+        });
+      });
+    };
+
+    var showAnnotatedDocuments = function(session) {
+      $('#annotated').off('click');
+      var sessionID = session.data('sessionID');
+      var url = '/annotatedDocuments';
+      $.get(url, {'sessionID':sessionID}, function(res) {
+        var docIDs = res.annotated;
+
+        $('#annotated').click(function() {
+          showAnnotatedDocuments(session);
+        });
+
+        if(docIDs.length == 0) {
+          showEmptyMessage();
+          return;
+        }
+
+        $.ajax({
+          url: "http://52.36.127.109:9000/getDocuments",
+          type: "POST",
+          dataType: "text",
+          data: docIDs.toString(),
+          contentType: "text/plain"
+        }).done(function(data) {
+          showDocuments(JSON.parse(data));
+        });
+      });
+    };
+
+    var editSession = function(session) {
+      var name = session.find('.session-header-content')
+                        .html();
+      var description = session.find('.session-description-content')
+                               .html();
+      var id = session.data('sessionID');
+
+      var deleteButton = document.createElement('button');
+      deleteButton.innerHTML = 'Delete Session';
+      deleteButton.id = 'delete';
+      deleteButton.className = 'uppercase';
+
+      createModal("30%", "55vh");
+      $('#modal-container').load('/assets/html/session-form.html', function() {
+        $('#session-name').val(name);
+        $('#session-description').val(description);
+        $('#session-form').append(deleteButton);
+        $('.submit').html('Done');
+        $('.submit').click(function(e) {
+          e.preventDefault();
+          var newName = $('#session-name').val();
+          var newDescription = $('#session-description').val();
+          var url = '/sessions';
+          var obj = { 'name':newName, 'description':newDescription, 'id':id };
+
+          session.find('.session-header-content')
+                 .html(newName);
+          session.find('.session-description-content')
+                 .html(newDescription);
+          removeModal();
+
+          $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            url: url,
+            data: JSON.stringify(obj)
+          }).done(function(res) {
+            if(res.error != null) {
+              alert(res.error);
+            } 
+          });
+        });
+        $('#delete').click(function(e) {
+          e.preventDefault();
+          removeModal();
+          if($('#session-info').length != 0) {
+            hideSessionInfo();
+          }
+
+          session.hide();
+
+          var url = '/~session';
+          var obj = { 'sessionID':id };
+
+          $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            url: url,
+            data: JSON.stringify(obj)
+          }).done(function(res) {
+            if(res.error != null) {
+              session.show();              
+              alert(res.error);
+            } else {
+              session.remove();
+              moveSessionsUp(sessionsPerRow);
+              $('.session-row').width($('.session-row').width() + 5);
+            }
+          });
+        });
+      });
+    };
+    //
+    // showActionMenu dynamically creates the following HTML structure
+    // <div id="action-menu">
+    //   <div id="action-menu-items" class="center-vertical">
+    //     <div class="action-menu-item">
+    //       <img class="action-icon" src="assets/images/save_inv.png"></img>
+    //       <span class="action-label uppercase ltr-spacing-sml">View Saved Documents</span>
+    //     </div>
+    //     <div class="action-menu-item">
+    //       <img class="action-icon" src="assets/images/Continue_icon.svg"></img>
+    //       <span class="action-label uppercase ltr-spacing-sml">Resume Search</span>
+    //     </div>
+    //   </div>
+    // </div>
+    //
+    var showActionMenu = function(appendee) {
+      var menu = document.createElement('div');
+      var menuItems = document.createElement('div');
+      var menuItem_more = document.createElement('div');
+      var menuItem_resume = document.createElement('div');
+      var more_img = document.createElement('img');
+      var more_label = document.createElement('span');
+      var resume_img = document.createElement('img');
+      var resume_label = document.createElement('span');
+
+      resume_img.className = 'action-icon';
+      resume_img.src = '/assets/images/Continue_icon.svg';
+      resume_label.setAttribute('class', 'action-label uppercase ltr-spacing-sml');
+      resume_label.appendChild(document.createTextNode('Resume Search'));
+      menuItem_resume.appendChild(resume_img);
+      menuItem_resume.appendChild(resume_label);
+      menuItem_resume.className = 'action-menu-item';
+      menuItem_resume.id = 'resume';
+
+      more_img.className = 'action-icon';
+      more_img.src = '/assets/images/more.svg';
+      more_label.setAttribute('class', 'action-label uppercase ltr-spacing-sml');
+      more_label.appendChild(document.createTextNode('More Options'));
+      menuItem_more.appendChild(more_img);
+      menuItem_more.appendChild(more_label);
+      menuItem_more.className = 'action-menu-item';
+      menuItem_more.id = 'more';
+
+      menuItems.appendChild(menuItem_resume);
+      menuItems.appendChild(menuItem_more);
+      menuItems.className = 'center-vertical';
+      menuItems.setAttribute('id', 'action-menu-items');
+
+      menu.appendChild(menuItems);
+      menu.setAttribute('id', 'action-menu');
+
+      appendee.append(menu);
+
+      $(document).click(clickOutsideActionMenu);
+
+      $('#more').click(function(event){
+        showSessionInfo($(event.target).parents('.session-box'));
+      });
+
+      $('#resume').click(function(){
+        window.location = "/search";
+      })
+    };
+
+    var removeActionMenu = function() {
+      $('#action-menu').remove();
+    };
+
+    var setTipPosition = function(index) {
+      var sessionWidth = $('.session-box').outerWidth(true);
+      var currentPosition = parseFloat($('.tip').css('left'));
+      var tipWidth = parseFloat($('.tip').css('border-bottom-width'));
+      var rowMargin = (parseFloat($('.session-row').outerWidth(true)) - 
+                       parseFloat($('.session-row').outerWidth())) / 2;
+      var tipPosition = rowMargin + sessionWidth * index + 
+                        0.5 * sessionWidth;
+      $('.tip').css('left', tipPosition);
+    };
+
+    var showSessionInfo = function(session) {
+      var sessionRow = session.parents('.session-row');
+      var infoBackground = document.createElement('div');
+      var sessionInfo = document.createElement('div');
+      var tip = document.createElement('div');
+
+      var saved = document.createElement('div');
+      var savedIcon = document.createElement('img');
+      var savedLabel = document.createElement('span');
+      var history = document.createElement('div');
+      var historyIcon = document.createElement('img');
+      var historyLabel = document.createElement('span');
+      var annotated = document.createElement('div');
+      var annotatedIcon = document.createElement('img');
+      var annotatedLabel = document.createElement('span');
+      var edit = document.createElement('div');
+      var editIcon = document.createElement('img');
+      var editLabel = document.createElement('span');
+
+      tip.className = 'tip';
+
+      savedIcon.src = '/assets/images/save_inv.svg';
+      savedIcon.className = 'info-item-icon';
+      savedLabel.appendChild(document.createTextNode('View Saved Documents'));
+      savedLabel.setAttribute('class', 'info-item-label uppercase ltr-spacing-sml');
+      saved.appendChild(savedIcon);
+      saved.appendChild(savedLabel);
+      saved.setAttribute('class', 'info-item center-vertical');
+      saved.id = 'saved';
+
+      historyIcon.src = '/assets/images/document.svg';
+      historyIcon.className = 'info-item-icon';
+      historyLabel.appendChild(document.createTextNode('View Document History'));
+      historyLabel.setAttribute('class', 'info-item-label uppercase ltr-spacing-sml');
+      history.appendChild(historyIcon);
+      history.appendChild(historyLabel);
+      history.setAttribute('class', 'info-item center-vertical');
+      history.id = 'history';
+
+      annotatedIcon.src = '/assets/images/marker_inv.svg';
+      annotatedIcon.className = 'info-item-icon';
+      annotatedLabel.appendChild(document.createTextNode('View Annotated Documents'));
+      annotatedLabel.setAttribute('class', 'info-item-label uppercase ltr-spacing-sml');
+      annotated.appendChild(annotatedIcon);
+      annotated.appendChild(annotatedLabel);
+      annotated.setAttribute('class', 'info-item center-vertical');
+      annotated.id = 'annotated';
+
+      editIcon.src = '/assets/images/gear.svg';
+      editIcon.className = 'info-item-icon';
+      editLabel.appendChild(document.createTextNode('Edit Session'));
+      editLabel.setAttribute('class', 'info-item-label uppercase ltr-spacing-sml');
+      edit.appendChild(editIcon);
+      edit.appendChild(editLabel);
+      edit.setAttribute('class', 'info-item center-vertical');
+      edit.id = 'edit';
+
+      infoBackground.id = 'session-info-background';
+
+      sessionInfo.appendChild(tip);
+
+      sessionInfo.id = 'session-info';
+      sessionInfo.style.display = 'none';
+
+      sessionRow.after(infoBackground);
+      sessionRow.after(sessionInfo);
+
+      $('#session-info').slideDown(function(){
+        sessionInfo.appendChild(saved);
+        $('#saved').click(function() {
+          showSavedDocuments(session);
+        });
+        sessionInfo.appendChild(history);
+        $('#history').click(function() {
+          showHistory(session);
+        });
+        sessionInfo.appendChild(annotated);
+        $('#annotated').click(function() {
+          showAnnotatedDocuments(session);
+        });
+        sessionInfo.appendChild(edit);
+        $('#edit').click(function() {
+          editSession(session);
+        });
+      });
+
+
+      var sessionIndex = sessionRow.children().index(session);
+      setTipPosition(sessionIndex);
+
+      $('#session-info-background').click(function(event) {
+        if($('#session-info').length == 1 &&
+           !$(event.target).is('#saved, #saved *') &&
+           !$(event.target).is('#session-info, #session-info *')) {
+          hideSessionInfo();
+        }
+      });
+    };
+
+    var hideSessionInfo = function() {
+      $('#session-info').empty();
+      $('#session-info').slideUp(400, function() {
+        $('#session-info').remove();
+        $('#session-info-background').remove();
+      });
+    };
 
     var sessionClicked = function() {
       var url = '/session';
-      var obj = {'id':$(this).attr('id')};
-      console.log($(this).attr('id'));
+      var obj = {'id':$(this).data('sessionID')};
+      
+      $(this).addClass('clicked');
 
       $.ajax({
         type: 'POST',
@@ -134,7 +701,12 @@
         }
       });
 
-      window.location = "/search";
+      if($('#action-menu').length != 0) {
+        $('.clicked').toggleClass("clicked", false);
+        removeActionMenu();
+      }
+
+      showActionMenu($(this));
     };
 
     // the newSession() generates the following html structure 
@@ -152,7 +724,7 @@
     // </div>
 
     var newSession = function(name, description, id) {
-      $('#sessions-container').prepend(
+      $('#new').before(
         $('<div/>').append(
           $('<div/>').append(
             $('<div/>').html(name)
@@ -162,21 +734,138 @@
           $('<div/>').append(
             $('<div/>').html(description)
                        .addClass('session-description-content')
-            ).addClass('session-description')
-          ).attr('id', id)
-           .addClass('session session-box')
-           .click(sessionClicked)
+          ).addClass('session-description')
+        ).addClass('session session-box')
+         .data('sessionID', id)
+         .click(sessionClicked)
         );
+
+      if((sessionsCount + 1) % sessionsPerRow == 0) {
+        var sessionRow = document.createElement('div');
+        sessionRow.className = 'session-row';
+
+        $('#new').appendTo(sessionRow);
+        $('#sessions-container').append(sessionRow);
+        $('.session-row').width(rowWidth);
+      }
+
+      ++sessionsCount;
     };
 
     var loadSessions = function() {
       var url = "/session";
 
+      var containerWidth = $('#sessions-container').width();
+      var sessionWidth = $('.session-box').outerWidth(true);
+      sessionsPerRow = Math.floor(containerWidth / sessionWidth);
+      rowWidth = sessionWidth * sessionsPerRow;
+
+      console.log(containerWidth);
+      console.log(sessionWidth);
+      console.log(sessionsPerRow);
+      console.log(rowWidth);
+
+      $('.session-row').width(rowWidth);
+
+      moveSessionsUp = function(sessionsPerRow) {
+        $('.session-row').each(function(){
+          var sibling = $(this).nextAll('.session-row').first();
+
+          while($(this).children().length < sessionsPerRow && 
+                sibling.length != 0 &&
+                sibling.children().length > 0) {
+            var session = sibling.children().first();
+            session.appendTo($(this));
+
+            if($('#session-info').length != 0 &&
+               session.has('#action-menu').length != 0) {
+              $(this).after($('#session-info'));
+              // $('#action-menu').after(sibling);
+            }
+          }
+
+          if(sibling.children().length == 0) {
+            sibling.remove();
+          }
+          console.log($(this));
+        });
+      };
+
+      $(window).resize(function(){
+        var newWidth = $('#sessions-container').width();
+        var newSessionsPerRow = Math.floor(newWidth / sessionWidth);
+        var newRowWidth = sessionWidth * newSessionsPerRow;
+
+        if(newSessionsPerRow != sessionsPerRow) {
+          // difference is negative if the screen grows
+          var difference = sessionsPerRow - newSessionsPerRow;
+          if(difference > 0) {
+            $('.session-row').each(function(i) {
+              var sibling = $(this).nextAll('.session-row').first();
+
+              console.log('row ' + i + ' sessions count ' + $(this).children().length);
+
+              while($(this).children().length > newSessionsPerRow) {
+                if(sibling.length == 0) {
+                  var sessionRow = document.createElement('div');
+                  sessionRow.className = 'session-row';
+
+                  $('#sessions-container').append(sessionRow);
+                  $('.session-row').width(newRowWidth);
+
+                  sibling = $(sessionRow);
+                }
+
+                var session = $(this).children().last();
+                session.prependTo(sibling);
+
+                if($('#session-info').length != 0 &&
+                   session.has('#action-menu').length != 0) {
+                  sibling.after($('#session-info'));
+                  // $('#action-menu').after(sibling);
+                }
+              }
+
+              console.log('row ' + i + ' sessions count ' + $(this).children().length);
+            });
+          } else if(difference < 0) {
+            moveSessionsUp(newSessionsPerRow);
+          }
+
+          $('.session-row').width(newRowWidth + 5);
+          if($('#session-info').length != 0) {
+            $('#session-info').width('103%');
+              var clicked = $('#action-menu').parents('.session').first();
+              var sessionIndex = $('#action-menu').parents('.session-row')
+                                                  .children().index(clicked);
+              setTipPosition(sessionIndex);
+          }
+          sessionsPerRow = newSessionsPerRow;
+          rowWidth = newRowWidth;
+          console.log(newSessionsPerRow);
+        }
+      });
+
       $.get(url, function(res) {
-// need to check if the response is erroneous or not.
-        for(var i = 0; i < res.length; ++i) {
-          var session = res[i];
+        if(res.error) {
+          alert(res.error);
+          return;
+        }
+
+        var keys = Object.keys(res);
+
+        keys.sort(function(a,b){
+          return parseInt(a) - parseInt(b);
+        });
+        
+        for(var i = 0; i < keys.length; ++i) {
+          var session = res[keys[i]];
+
           newSession(session.name, session.description, session.id);
+
+          if(session.id > maxID) {
+            maxID = parseInt(session.id);
+          }
         }
         $('#loading').remove();
       });
@@ -212,7 +901,7 @@
             var url = "/sessions";
             var name = $('#session-name').val();
             var description = $('#session-description').val();
-            var id = maxID + 1;
+            var id = parseInt(maxID) + 1;
 
             // check that the session was at least given a name
             if(name.length == 0) {
@@ -234,12 +923,14 @@
             });
 
             newSession(name, description, id);
+            maxID = parseInt(maxID) + 1;
             removeModal();
           });
         });
       });
 
       $(".session").click(sessionClicked);
+
     });
   </script>
 </head>
@@ -249,8 +940,11 @@
       <h1 class="uppercase ltr-spacing center-vertical">Sessions</h1>
     </div> 
     <div id="sessions-container">
-      <div id="new" class="session-box">
-        <div id="new-content"></div>
+      <div class="session-row">
+        <div id="new" class="session-box">
+          <div id="new-content">
+          </div>
+        </div>
       </div>
     </div>
   </div>
