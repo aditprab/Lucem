@@ -44,11 +44,18 @@ POST    /sessions                   controllers.Application.addSession()
 
 GET     /session                    controllers.Application.getSessions()
 POST    /session                    controllers.Application.visitSession()
+POST    /~session                   controllers.Application.deleteSession()
 
-POST    /document                   controllers.Application.addDocumentToSession()
+GET     /documentHistory            controllers.Application.getDocumentHistory(sessionID:String)
+POST    /document                   controllers.Application.addToDocumentHistory()
 
+GET     /annotatedDocuments			controllers.Application.getAnnotatedDocuments(sessionID:String)
 GET     /highlight                  controllers.Application.getHighlights(docID:String)
 POST    /highlight                  controllers.Application.addHighlight()
 
+GET     /savedDocuments             controllers.Application.getSavedDocuments(sessionID:String)
+GET     /saveDocument               controllers.Application.wasDocumentSaved(docID:String)
+POST    /saveDocument				controllers.Application.saveDocumentToSession()
+
 GET     /validate                   controllers.Application.validate()
-GET     /testFacet                 controllers.Application.testFacet()
+GET     /testFacet                  controllers.Application.testFacet()

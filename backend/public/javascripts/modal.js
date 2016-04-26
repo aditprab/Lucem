@@ -4,6 +4,11 @@ var createModal = function(width, height, file) {
   var containerHTML = "<div id=\"modal-container\"></div>";
   var closeButtonHTML = "<div id=\"close\"></div>";
   $("body").prepend(modalBackground);
+  $("body").css({
+    'overflow':'hidden',
+    'overflow-y':'hidden',
+    'overflow-x':'hidden'
+  });
   $("#modal-background").append(modalHTML);
   $("#modal").append(containerHTML);
   $("#modal").width(width);
@@ -28,5 +33,10 @@ var createModal = function(width, height, file) {
 
 var removeModal = function() {
   $("#modal-background").remove();
+  $("body").css({
+    'overflow':'auto',
+    'overflow-y':'auto',
+    'overflow-x':'auto'
+  });
   $(document).off("keyup");
 };

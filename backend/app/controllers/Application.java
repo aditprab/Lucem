@@ -248,7 +248,7 @@ public class Application extends Controller {
 
           user.addSession(req.get("name").asText(),
                           req.get("description").asText(),
-                          req.get("id").asInt());
+                          req.get("id").asText());
 
           Thread t = new Thread(new UserWriter(user));
           t.start();
@@ -258,6 +258,33 @@ public class Application extends Controller {
 
         response().setContentType("application/json");
         return ok(res);
+    }
+
+    public static Result deleteSession() {
+      final Http.Session session = Http.Context.current().session();
+      JsonNode req = request().body().asJson();
+      ObjectNode res = factory.objectNode();
+      final String[] expectedKeys = {"sessionID"};
+
+      response().setContentType("application/json");
+
+      if(req == null || !isValidRequest(req, expectedKeys)) {
+        res.put("error", "invalid request");
+        return ok(res);
+      } else if(session.get("email") == null) {
+        res.put("error", "not logged in");
+        return ok(res);
+      }
+
+      User user = User.find(session.get("email"));
+      user.removeSession(req.get("sessionID").asText());
+
+      Thread t = new Thread(new UserWriter(user));
+      t.start();
+
+      res.put("status", "ok");
+
+      return ok(res);
     }
 
     public static Result visitSession() {
@@ -277,38 +304,141 @@ public class Application extends Controller {
         return ok(res);
     }
 
-    public static Result addDocumentToSession() {
-        final Http.Session session = Http.Context.current().session();
-        JsonNode req = request().body().asJson();
-        ObjectNode res = factory.objectNode();
-        final String[] expectedKeys = {"docID"};
+    // adds the document ID to the user's document viewing history.
+    public static Result addToDocumentHistory() {
+      final Http.Session session = Http.Context.current().session();
+      JsonNode req = request().body().asJson();
+      ObjectNode res = factory.objectNode();
+      final String[] expectedKeys = {"docID"};
 
 // separating this and else if case so that an alert won't be triggered
 // for the error response
-        if(session.get("sessionID") == null) {
-          res.put("user", "not logged in");
-        } else if(!isValidRequest(req, expectedKeys)) {
-          res.put("error", "invalid request");
+      if(session.get("email") == null ||
+         session.get("sessionID") == null) {
+        res.put("user", "not logged in");
+      } else if(!isValidRequest(req, expectedKeys)) {
+        res.put("error", "invalid request");
+      } else {
+        User user = User.find(session.get("email"));
+
+        user.addDocumentToHistory(session.get("sessionID"),
+                         req.get("docID").asText());
+
+        Thread t = new Thread(new UserWriter(user));
+        t.start();
+
+        res.put("status", "ok");
+      }
+
+      response().setContentType("application/json");
+      return ok(res); 
+    }
+
+    public static Result getDocumentHistory(String sessionID) {
+      final Http.Session session = Http.Context.current().session();
+      ObjectNode res = factory.objectNode();
+
+      if(session.get("email") == null) {
+        res.put("user", "not logged in");
+      } else if(sessionID == null) {
+        res.put("error", "invalid request");
+      } else {
+        User user = User.find(session.get("email"));
+
+        res.put("history", user.getDocumentHistory(sessionID));
+      }
+
+      return ok(res);
+    }
+
+    public static Result getAnnotatedDocuments(String sessionID) {
+      final Http.Session session = Http.Context.current().session();
+      ObjectNode res = factory.objectNode();
+
+      if(session.get("email") == null) {
+        res.put("user", "not logged in");
+      } else if(sessionID == null) {
+        res.put("error", "invalid request");
+      } else {
+        User user = User.find(session.get("email"));
+
+        res.put("annotated", user.getAnnotatedDocuments(sessionID));
+      }
+
+      return ok(res);
+    }
+    public static Result saveDocumentToSession() {
+      final Http.Session session = Http.Context.current().session();
+      JsonNode req = request().body().asJson();
+      ObjectNode res = factory.objectNode();
+      final String[] expectedKeys = {"docID", "saved"};
+
+      if(session.get("email") == null || 
+         session.get("sessionID") == null) {
+        res.put("user", "not logged in");
+      } else if(!isValidRequest(req, expectedKeys)) {
+        res.put("error", "invalid request");
+      } else {
+        User user = User.find(session.get("email"));
+
+        if(req.get("saved").asBoolean(/* default value */ true)) {
+          user.saveDocument(session.get("sessionID"),
+                          req.get("docID").asText());
         } else {
-          User user = User.find(session.get("email"));
-          int sessionID = Integer.parseInt(session.get("sessionID"));
-
-          user.addDocument(sessionID, req.get("docID").asText());
-
-          Thread t = new Thread(new UserWriter(user));
-          t.start();
-
-          res.put("status", "ok");
+          user.unsaveDocument(session.get("sessionID"),
+                            req.get("docID").asText());
         }
 
-        response().setContentType("application/json");
-        return ok(res); 
+        Thread t = new Thread(new UserWriter(user));
+        t.start();
+
+        res.put("status", "ok");
+      }
+
+      response().setContentType("application/json");
+      return ok(res); 
+    }
+
+    public static Result getSavedDocuments(String sessionID) {
+      final Http.Session session = Http.Context.current().session();
+      ObjectNode res = factory.objectNode();
+
+      if(session.get("email") == null) {
+        res.put("user", "not logged in");
+      } else if(sessionID == null) {
+        res.put("error", "invalid request");
+      } else {
+        User user = User.find(session.get("email"));
+
+        res.put("saved", user.getSavedDocuments(sessionID));
+      }
+
+      return ok(res);
+    }
+
+    public static Result wasDocumentSaved(String docID) {
+      final Http.Session session = Http.Context.current().session();
+      ObjectNode res = factory.objectNode();
+
+      if(session.get("email") == null || 
+         session.get("sessionID") == null) {
+        res.put("user", "not logged in");
+      } else if(docID == null) {
+        res.put("error", "invalid docID");
+      } else {
+        User user = User.find(session.get("email"));
+
+        res.put("saved", user.savedDocument(session.get("sessionID"), docID));
+        res.put("status", "ok");
+      }
+
+      response().setContentType("application/json");
+      return ok(res); 
     }
 
     public static Result getHighlights(String docID) {
       final Http.Session session = Http.Context.current().session();
       ObjectNode res = factory.objectNode();
-      int sessionID;
 
       if(session.get("email") == null || session.get("sessionID") ==
          null) {
@@ -316,13 +446,11 @@ public class Application extends Controller {
         return ok(res);
       }
 
-      sessionID = Integer.parseInt(session.get("sessionID"));
-
       User user = User.find(session.get("email"));
 
       response().setContentType("application/json");
 
-      return ok(user.getHighlights(sessionID, docID));
+      return ok(user.getHighlights(session.get("sessionID"), docID));
     }
 
     public static Result addHighlight() {
@@ -339,9 +467,9 @@ public class Application extends Controller {
           res.put("error", "invalid request");
         } else {
           User user = User.find(session.get("email"));
-          int sessionID = Integer.parseInt(session.get("sessionID"));
 
-          user.addHighlight(sessionID, req.get("docID").asText(),
+          user.addHighlight(session.get("sessionID"),
+                            req.get("docID").asText(),
                             req.get("startIndex").asInt(),
                             req.get("stopIndex").asInt());
 
