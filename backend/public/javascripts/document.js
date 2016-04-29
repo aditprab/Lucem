@@ -1,6 +1,7 @@
 var highlightModeOn = false;
     var dragged = false;
     var clickedHighlight = false;
+    var saved = false;
     var highlightOffset = $(window).height();
     var documentID;
     var documentHTML;
@@ -247,15 +248,36 @@ console.log(obj);
 
 var doc_init = function(id, html, callback) {
   var url = "/highlight";
+  var saved_url = "/saveDocument";
+
   documentID = id;
+
   $("#document").html(html.replace(/ +(?=)/g, ' '));
   $(".hidden").html($("#document").html());
 
   $.ajax({
     type:'GET',
+    url:saved_url,
+    data:{"docID":id}
+  }).done(function(data) {
+    if(data == null) {
+      return;
+    }
+    saved = data.saved;
+
+    console.log(data);
+    if(saved) {
+      $('#save-btn').attr('title', 'saved');
+      $('#save-btn').css('background-color', '#000000');
+      $('#save-btn').css('background-image', 'url("/assets/images/save_inv.svg")');
+    }
+  });
+
+  $.ajax({
+    type:'GET',
     url:url,
     data:{"docID":id}
-  }).done(function(data){
+  }).done(function(data) {
     if(data == null) {
       return;
     }
@@ -297,12 +319,43 @@ $(document).ready(function() {
             if(!highlightModeOn) {
               highlight_handler();
               $(this).css("background-color", "rgb(255,255,88)");
-              $(this).attr("title", "highlight on");
+              $(this).attr("title", "highlight mode on");
             } else {
               $(this).css("background-color", "transparent");
-              $(this).attr("title", "highlight off");
+              $(this).attr("title", "highlight mode off");
             }
             highlightModeOn = !highlightModeOn;
           });
+
+  $('#save-btn').click(function() {
+    saved = !saved;
+    var title;
+
+    if(saved) {
+      title = 'saved';
+      $(this).css('background-color', '#000000');
+      $(this).css('background-image', 'url("/assets/images/save_inv.svg")');
+    } else {
+      title = 'not saved';
+      $(this).css('background-color', '#FFFFFF');
+      $(this).css('background-image', 'url("/assets/images/save.svg")');
+    }
+
+    $(this).attr('title', title);
+
+    var url = '/saveDocument';
+    var obj = {'docID':documentID, 'saved':saved};
+
+    $.ajax({
+      type:'POST',
+      contentType: 'application/json',
+      url: url,
+      data: JSON.stringify(obj)
+    }).done(function(res) {
+      if(res.error != null) {
+          alert(res.error);
+      }
+    });
+  });
 
 });

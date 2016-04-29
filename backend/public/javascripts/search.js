@@ -600,6 +600,7 @@ function saveState() {
         body: $("body").clone(true),
         scrollPosition: $(document).scrollTop()
     });
+    console.log(JSON.stringify(states));
     // var data = [];
     // var results = $("body").find(".result");
     // for(var i = 0; i < results.length; i++) {
