@@ -65,9 +65,11 @@ public class Application extends Controller {
 
     public static Result query() throws Exception {
         Query query = new Query();
-        Map<String, String[]> form = request().body().asFormUrlEncoded();
-        List<Integer> list = query.querySolr(form.get("query")[0]);
+        
+	Map<String, String[]> form = request().body().asFormUrlEncoded();
+	List<Integer> list = query.querySolr(form.get("query")[0]);
         String result = query.queryCourtListener(list);
+
         return ok(result);
     }
 
@@ -93,10 +95,15 @@ public class Application extends Controller {
     	return ok(result);
     }
 	
-    public static Result facet(String caseCite, String facetRequest) throws Exception{
+    public static Result facet(String courtId, String facetRequest) throws Exception{
 	//facetRequest is a comma separated list (no spaces)  of fields which correspond to columns in the supremeCourtData.csv.
 	FacetSimilar similar = new FacetSimilar();
-	List<String> courtIds = similar.getSimilarCases(caseCite, facetRequest);
+	
+	List<String> courtIds = similar.queryMongoForSimilar(courtId, facetRequest);
+		if(courtIds == null){
+			return badRequest("the world is ending and the Lord has abandoned us");
+		}	
+
 	PageRank pageRankUtil = new PageRank();
 	List<String> pageRanks = pageRankUtil.getPageRanks(courtIds);
 

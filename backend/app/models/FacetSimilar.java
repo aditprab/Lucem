@@ -1,5 +1,8 @@
 package models;
 
+import com.mongodb.client.*;
+import static com.mongodb.client.model.Filters.*;
+import org.bson.Document;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -10,7 +13,66 @@ import org.json.*;
 import play.Logger;
 
 public class FacetSimilar{
+	
+	public static Map<Integer, String> columnToKey = new HashMap<Integer, String>();
+	
 
+	public static List<String> queryMongoForSimilar(String courtId, String facets) throws Exception{
+		//Query mongo for other facets with these values.
+		System.out.println("court id is: " + courtId);
+		initializeMap();
+		List<String> facetList = facetStringToListOfKeys(facets);
+		//Facet list has the keys to get. Query mongo for the document with given courtId, then pull the values of these keys.
+
+		MongoConnection mc = new MongoConnection("supremeCourtDataDB.properties");
+   	        MongoCollection<Document> collection = mc.getCollection();
+		
+		int courtIdInt = Integer.parseInt(courtId);
+		Document d = collection.find(eq("courtId", courtIdInt)).first();
+		
+		//Get values in question from Document d, then query again for these values. 
+		List<String> tempValues = new ArrayList<String>();
+		for(int i=0; i < facetList.size(); i++){
+			String temp = d.getString(facetList.get(i));
+			System.out.println(temp);
+			tempValues.add(temp);
+		}
+		
+		return null;		
+
+	}
+
+	private static void initializeMap(){
+		columnToKey.put(10, "term");
+		columnToKey.put(12, "chief");
+          	columnToKey.put(17, "petitioner");
+                columnToKey.put(41, "issueArea");
+                columnToKey.put(42, "decisionDirection");
+                columnToKey.put(46, "lawType");
+	}
+
+	private static List<String> facetStringToListOfKeys(String facets) throws Exception{
+		
+		List<String> facetList = new ArrayList<String>();
+		
+		String array[] = facets.split(",");
+		for(int i=0; i < array.length; i++){
+			int temp = Integer.parseInt(array[i]);
+			String key = columnToKey.get(temp);
+			if(key != null){
+				facetList.add(key);
+			}
+		}
+
+		return facetList;
+	}
+
+
+
+	//If moving back to CSV method for some reason, let's keep these methods here. 
+	//Application.java will call queryMongoForSimilar anyways.
+
+	/*
         public static List<String> getSimilarCases(String caseCite, String facets) throws Exception{
 		System.out.println(caseCite);
 		List<Integer> facetList = getFacetsFromString(facets);	
@@ -52,12 +114,12 @@ public class FacetSimilar{
 		while((line = br.readLine()) != null){
 			String [] data = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
 		
-			if(data.length > 53){
-				//There is a courtId. 
-				String courtId = data[53];
-				boolean flag = false;
-				//Get data from line into list using the method from before.
-				List<String> potentialMatchList = getDataFromLine(line, facetList); 	
+			//There is a courtId. 
+			String courtId = data[53];
+			boolean flag = false;
+			//Get data from line into list using the method from before.
+			List<String> potentialMatchList = getDataFromLine(line, facetList); 	
+				
 				for(int i=0; i < valuesForCase.size(); i++){
 					String expected = valuesForCase.get(i);
 					String actual = potentialMatchList.get(i);
@@ -76,8 +138,8 @@ public class FacetSimilar{
 						resultList.add(courtId);
 					}
 				}	
-			}
 		}
+	
 
 		br.close();
 		return resultList;
@@ -108,4 +170,5 @@ public class FacetSimilar{
 		
 		return list;
 	}
+	*/
 }
