@@ -1,6 +1,6 @@
-var documents = []; 
+var documents = [];
 var states = [];
-var maxResults = 8;
+var maxResults = 10;
 
 function loadingAnimation(insertSelector) {
     console.log(insertSelector);
@@ -194,11 +194,14 @@ function showHeader(result) {
 function citationHandler() {
     if($(this).hasClass("selected"))
         return;
-    // showHeader($(this).parent().parent());
+    // set up header and positions
     $(".selected").removeClass("selected");
     $("#facet-select").css("display", "none");
+    placeVis();
+    adjustVis();
     $(this).addClass("selected");
     $("#menu").css("display", "none");
+
     var data = "";
     var selectedCase = {
         absolute_url: $("#header-title").text() + "/",
@@ -208,7 +211,7 @@ function citationHandler() {
     var citations = $(this).data("ids");
     var index = $(this).data("page") * maxResults;
     var count = 0;
-    
+
     // hide buttons if on first or last page
     $("#pagination").find(".prev-button").css("display", "inline");
     $("#pagination").find(".next-button").css("display", "inline");
@@ -216,10 +219,10 @@ function citationHandler() {
         $("#pagination").find(".prev-button").css("display", "none");
     if(index + maxResults >= citations.length)
         $("#pagination").find(".next-button").css("display", "none");
-    
+
     while(count < maxResults && (index + count) < citations.length) {
         data += citations[index + count];
-        if(count < maxResults - 1) 
+        if(count < maxResults - 1)
             data += ",";
         count++;
     }
@@ -237,15 +240,14 @@ function citationHandler() {
 function similarityHandler() {
     if($(this).hasClass("selected"))
         return;
-    //saveState();
     $(".selected").removeClass("selected");
-    //$("#facet-select").css("display", "none");
     $(this).addClass("selected");
-    // clearPage();
     $("#citations").data("page", 0);
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
     $("#facet-select").css("display", "none");
+    placeVis();
+    adjustVis();
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
     console.log(field);
@@ -283,7 +285,7 @@ function similarityHandler() {
                 success: function(response) {
                     var obj = JSON.parse(response);
                     var docs = obj.documents;
-                    for(var i = 0; i < docs.length; i++) 
+                    for(var i = 0; i < docs.length; i++)
                         docs[i].score = simScores[i].score;
                     console.log(obj.documents);
                     removeLoadingAnimation();
@@ -300,15 +302,17 @@ function facetHandler() {
         return;
     $(".selected").removeClass("selected");
     $(this).addClass("selected");
-    // clearPage();
     $("#facet-select").css({
-        display: "initial",
+        display: "inherit",
         top: $("#nav-container").css("height")
     });
     $("#results").html("");
     $("#vis").find("svg").html("");
     $("#pagination").css("display", "none");
     $("#menu").css("display", "none");
+    placeVis();
+    adjustVis();
+
 }
 
 function facetSelectHandler() {
@@ -321,7 +325,7 @@ function facetSelectHandler() {
         return;
     for(var i = 0; i < checked.length; i++) {
         facetRequest += checked[i].value
-        if(i < checked.length - 1) 
+        if(i < checked.length - 1)
             facetRequest += ",";
     }
     data += caseCite + facetRequest;
@@ -341,7 +345,7 @@ function facetSelectHandler() {
             // sort ids based on page rank
             while(count < maxResults && (index + count) < ids.length) {
                 data += ids[index + count].courtId;
-                if(count < maxResults - 1) 
+                if(count < maxResults - 1)
                     data += ",";
                 count++;
             }
@@ -380,7 +384,7 @@ function pageHandler() {
     var target;
     if($(this).hasClass("prev-button"))
         target = citations.data("page") - 1;
-    else 
+    else
         target = citations.data("page") + 1;
     if(target * maxResults >= citations.data("ids").length || target < 0) {
         console.log("do nothing");
@@ -405,7 +409,8 @@ function backHandler() {
     var state = states.pop();
     //$("body").html(state.content);
     $("body").remove();
-    $("html").append(state);
+    $("html").append(state.body);
+    $(document).scrollTop(state.scrollPosition);
     console.log(state);
     // var results = $("body").find(".result");
     // for(var i = 0; i < results.length; i++) {
@@ -428,11 +433,21 @@ function backHandler() {
 }
 
 function nodeHandler() {
+    $(this).addClass("hovered");
     var caseInfo = $(this).find("circle").data("docInfo");
     var graph = $(this).data("graph");
     var menu = $("#menu");
     var attrs = menu.find("ul");
     var link = menu.find(".title");
+    var svg = $("#vis").find("svg");
+    var viewbox = svg[0].getAttribute("viewBox").split(" ");
+    var leftOffset = parseFloat(viewbox[0]);
+    var topOffset = parseFloat(viewbox[1]);
+    var viewWidth = parseFloat(viewbox[2]);
+    var viewHeight = parseFloat(viewbox[3]);
+
+    console.log(svg.width()/viewWidth);
+    console.log(viewHeight/svg.height())
 
     link.data("content", caseInfo.content);
     link.data("id", caseInfo.id);
@@ -449,11 +464,22 @@ function nodeHandler() {
     attrs.append($("<li>").html("Petitioner: " + (caseInfo.petitioner == "null" ? "N/A" : caseInfo.petitioner)));
     var width = menu.width();
     var height = menu.height();
+    var x = (graph.x - leftOffset) * (viewWidth/svg.width());
+    var y = (graph.y - topOffset) * (svg.height()/viewHeight);
+    // if(x < viewWidth/2)
+    //   x += width/2;
+    // else
+    //   x -= width/2;
+    if(y < svg.height()/2)
+      y += 0;
+    else
+      y -= height;
     $("#menu").css({
         display: "block",
-        top: graph.y - (height + (graph.radius/2)),
-        left: graph.x - width/2
+        top: y, //- (height + (graph.radius/2)),
+        left: x //+ width/2
     });
+    console.log((graph.x) + ", " + (graph.x - leftOffset) * (svg.width()/viewWidth));
 }
 
 function clearPage() {
@@ -468,6 +494,7 @@ function clearPage() {
 function optionHandler() {
     saveState();
     showHeader($(this).parent().parent());
+    $("#results-wrapper").width("45%");
     switch($(this).attr("class")) {
         case "citations":
             if($("#citations").hasClass("selected"))
@@ -489,6 +516,7 @@ function optionHandler() {
 
 function searchHandler() {
     console.log("search called");
+    $("#results-wrapper").width("55%");
     var url = "http://52.36.127.109:9000/search";
     //var url = "/search";
     //e.preventDefault();
@@ -537,7 +565,7 @@ function searchHandler() {
             $("#vis").find("svg").remove();
         });
 }
-   
+
 function attachHandlers() {
     //$(".title").click(resultHandler);
     $("#results").find(".title").click(viewHandler);
@@ -550,7 +578,7 @@ function attachHandlers() {
             //fill: "white"
         });
     });
-    
+
     $("#results").find(".title").mouseleave(function() {
         var target = "." + $(this).attr("class").split(" ")[1];
         $("circle" + target).attr({
@@ -559,7 +587,7 @@ function attachHandlers() {
             fill: "black"
         });
     });
-    
+
     $("#results").find(".citations").click(optionHandler);
     $("#results").find(".similarity").click(optionHandler);
     $("#results").find(".facets").click(optionHandler);
@@ -568,7 +596,10 @@ function attachHandlers() {
 function saveState() {
     console.log("saving state");
     console.log($("body").find("#loading").html());
-    states.push($("body").clone(true));
+    states.push({
+        body: $("body").clone(true),
+        scrollPosition: $(document).scrollTop()
+    });
     console.log(JSON.stringify(states));
     // var data = [];
     // var results = $("body").find(".result");
@@ -593,14 +624,13 @@ function saveState() {
     //console.log($("#citations").data("page"));
 }
 
-
 function buildResult(doc, index) {
     var ids = cleanCitations(doc.opinions_cited);
     var content = doc.html;
     var caseTitle = getTitle(doc.absolute_url);
     var id = getId(doc.resource_uri);
     var caseCite = doc.caseCite;
-        
+
     var result = $("<div>");
     var title = $("<h3>");
     var link = $("<a>");
@@ -612,11 +642,11 @@ function buildResult(doc, index) {
     var snippet = $("<div>");
     var snippetBuff = $("<div>").append(content);
     var attrs = $("<ul>");
-                
+
     // Set up title
     title.html(caseTitle);
     title.attr("class", "group-" + index);
-    
+
     // Set up link
     link.data("content", content);
     link.data("citations", ids);
@@ -626,25 +656,25 @@ function buildResult(doc, index) {
     link.attr("class", "title group-" + (index + 1));
 
     // data associated with header
-    options.data("title", caseTitle);    
-    
+    options.data("title", caseTitle);
+
     // Citation link
     showCitations.data("ids", ids);
     showCitations.data("page", 0);
     showCitations.attr("class", "citations");
     showCitations.html("Show Citations");
-    
+
     // Similarity link
     similarity.data("id", id);
     similarity.attr("class", "similarity");
     similarity.html("Similar content");
-    
+
     // Facet link
     facet.data("caseCite", caseCite);
     facet.attr("class", "facets");
     facet.html("Similar attributes");
-    
-    // Snippet 
+
+    // Snippet
     //snippet.html("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed dignissim libero. Phasellus sed enim ac eros accumsan vestibulum eu quis lacus. Proin condimentum rutrum neque, et molestie orci aliquam.");
     var snippetHtml = snippetBuff.find("#p1").find("p").html();
     var message = "";
@@ -658,7 +688,7 @@ function buildResult(doc, index) {
     }
     snippet.html(message);
     snippet.attr("class", "snippet");
-    
+
     // attrs
     attrs.append($("<li>").html("Date: " + (doc.date == "null" ? "N/A" : doc.date)));
     attrs.append($("<li>").html("Respondent: " + (doc.respondent == "null" ? "N/A" : doc.respondent)));
@@ -667,7 +697,7 @@ function buildResult(doc, index) {
     attrs.append($("<li>").html("Issue Area: " + (doc.issueArea == "null" ? "N/A" : doc.issueArea)));
     attrs.append($("<li>").html("Petitioner: " + (doc.petitioner == "null" ? "N/A" : doc.petitioner)));
     attrs.attr("class", "info");
-    
+
     // Append everything to result
     options.append(showCitations, similarity, facet);
     options.append(snippet, attrs);
@@ -723,10 +753,43 @@ function showChildren(currentDoc, docs) {
     }
     return list;
 }
-    
-    
+
+function placeVis() {
+    $("#vis").css({
+        top: $("#case-header").height() + $("#nav-container").outerHeight() +
+            ($("#facet-select").is(":visible") ? $("#facet-select").outerHeight() : 0),
+        height: window.innerHeight - ($("#case-header").height() + ($("#facet-select").is(":visible") ? $("#facet-select").outerHeight() : 0))
+    });
+    $("#vis").data({
+        top: parseInt($("#vis").css("top")),
+        height: $("#vis").height()
+    });
+}
+
+function adjustVis() {
+    var top = $("#vis").data("top") - ($(document).scrollTop());
+    //console.log($(document).scrollTop());
+    console.log(top);
+    if(top > 0) {
+        $("#vis").css("top", top);
+        $("#vis").css("height", $("#vis").data("height") + $(document).scrollTop());
+    }
+    else {
+        $("#vis").css("top", 0);
+        $("#vis").css("height", $("#vis").data("height") + $("#vis").data("top"));
+    }
+}
+
+function nodeLeave() {
+      console.log("Node leave");
+      window.setTimeout(function() {
+        if(!$("#menu").data("hovered"))
+          $("#menu").css("display", "none");
+      }, 1);
+}
+
 $(document).ready(function(){
-    
+
     $(".back").click(backHandler);
     $("#citations").click(citationHandler);
     $("#similarity").click(similarityHandler);
@@ -735,31 +798,60 @@ $(document).ready(function(){
     $(".prev-button").click(pageHandler);
     $(".next-button").click(pageHandler);
     $("#facet-select").find("button").click(facetSelectHandler);
-    
+
     $(".citations").click(optionHandler);
     $(".similarity").click(optionHandler);
     $(".facets").click(optionHandler);
-    
+
     $("#menu").find(".title").click(viewHandler);
 
     $("#menu").find(".glyphicon").click(function() {
         $("#menu").css("display", "none");
     });
 
-    $("#search").submit(searchHandler);
-    
-    $(".node").click(function() {
-        console.log($(this).data("graph")); 
+    $("#menu").mouseenter(function() {
+        $(this).data("hovered", true);
     });
-    
-    // $(document).scroll(function() {
-    //    console.log($(window).height()); 
-    // });
-    
+
+    $("#menu").mouseleave(function() {
+        console.log("Menu out");
+        $("#menu").css("display", "none");
+        $("#menu").data("hovered", false);
+    });
+
+    $("#search").submit(searchHandler);
+
+    $(".node").click(function() {
+        console.log($(this).data("graph"));
+    });
+
+    $(document).scroll(function() {
+        adjustVis();
+    });
+
+    $("#vis").css({
+        height: $("#case-header").height()
+    });
+
+    /* !!!!!!!!
+     * still buggy
+     * !!!!!!!!
+     */
     // $(window).resize(function() {
-    //     console.log($("body").scrollHeight);
+    //     // $("#vis").find("svg")[0].setAttribute("viewBox", "0 0 " + ($("#vis").width()) + " " + (2* window.innerHeight));
+    //     console.log(window.innerHeight);
+    //     // placeVis();
+    //     // adjustVis();
+    //     if(parseInt($("#vis").css("top")) > 0)
+    //         $("#vis").height(window.innerHeight - parseInt($("#vis").css("top")));
+    //     else
+    //         $("#vis").height(window.innerHeight);
+    //     $("#vis").data({
+    //         height: $("#vis").height(),
+    //         // top: parseInt($("#vis").css("top"))
+    //     });
     // });
-    
+
     // $("#search").submit(function() {
     //     $("#img-container").css("display", "none");
     //     $("#nav-container").prepend($("<div>").html($("#form-container")));
