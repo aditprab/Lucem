@@ -224,7 +224,7 @@ function buildGraph(selectedCase, nodes, count) {
     var nodeGroup = container.selectAll("g")
         .data(data).enter().append("g")
         .attr("class", function(d) {
-            $(this).mouseenter(nodeHandler);
+            $(this).mouseenter({event: event}, nodeHandler);
             $(this).mouseleave(nodeLeave);
             return "node";
         });
