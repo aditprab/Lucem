@@ -14,6 +14,7 @@ function loadingAnimation(insertSelector) {
 
 function removeLoadingAnimation() {
     $('#loading').remove();
+    $(".loading").removeClass("loading");
 }
 
 function cleanCitations(citations) {
@@ -122,6 +123,7 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                 $("#vis").find("svg").remove();
                 var nodes = buildGraph(selectedCase, documents, initialCount);
                 removeLoadingAnimation();
+                // $("#body-wrapper").removeClass("loading");
             },
             error: function(error) {
                 updateResults(documents);
@@ -148,7 +150,7 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                     if(i > 0)
                         data += ",";
                     var citations = cleanCitations(obj.documents[i].opinions_cited);
-                    console.log(citations.length);
+                    // console.log(citations.length);
                     var maxNodes = 5;
                     var count = 0;
                     while(count < maxResults) {
@@ -163,7 +165,7 @@ function getDocuments(inputIds, documents, currentDepth, targetDepth, selectedCa
                     }
                 }
                 data = cleanCSL(data);
-                console.log(data);
+                //console.log(data);
                 getDocuments(data, documents, currentDepth + 1, targetDepth, selectedCase);
             }
         });
@@ -187,10 +189,34 @@ function showHeader(result) {
     $("#citations").data("page", 0);
     $("#similarity").data("id", result.find(".similarity").data("id"));
     $("#view-doc").data("id", result.find(".title").data("id"));
-    $("#facets").data("caseCite", result.find(".facets").data("caseCite"));
+    $("#facets").data("id", result.find(".facets").data("id"));
     $("#view-doc").data("content", result.find(".title").data("content"));
 }
 
+// function getDocuments(ids, order = 0) {
+//     var url = "http://52.36.127.109:9000/getDocuments";
+//     if(order != 0) {
+//       return {
+//           promise: $.ajax({
+//               url: url,
+//               type: "POST",
+//               dataType: "text",
+//               data: ids,
+//               contentType: "text/plain"
+//           }),
+//           order: order
+//       }
+//     }
+//     return $.ajax({
+//         url: url,
+//         type: "POST",
+//         dataType: "text",
+//         data: ids,
+//         contentType: "text/plain"
+//     });
+// }
+
+// !citationHandler
 function citationHandler() {
     if($(this).hasClass("selected"))
         return;
@@ -211,6 +237,7 @@ function citationHandler() {
     var citations = $(this).data("ids");
     var index = $(this).data("page") * maxResults;
     var count = 0;
+    var docs = $(this).data("docs");
 
     // hide buttons if on first or last page
     $("#pagination").find(".prev-button").css("display", "inline");
@@ -226,6 +253,7 @@ function citationHandler() {
             data += ",";
         count++;
     }
+
     if(citations.length == 0) {
         updateResults("No citations for this case");
         return;
@@ -233,10 +261,60 @@ function citationHandler() {
     data = cleanCSL(data);
     console.log(data);
     var documents = [];
-    loadingAnimation("#vis");
+    // loadingAnimation("#body-wrapper");
+    $("#body-wrapper").addClass("loading");
     getDocuments(data, documents, 1, 2, selectedCase);
+
+    // Unfinished changes
+    // if(docs == undefined) {
+    //     for(var i = 0; i < citations.length; i++) {
+    //         data += citations[i];
+    //         if(i < citations.length - 1)
+    //             data += ",";
+    //     }
+    //     data = cleanCSL(data);
+    //     console.log(data);
+    //     $("#body-wrapper").addClass("loading");
+    //     getDocuments(data).done(function(response) {
+    //         var docs = JSON.parse(response).documents;
+    //         console.log(docs);
+    //         var finished = 0;
+    //         while(count < maxResults && (index + count) < citations.length) {
+    //             var data = "";
+    //             var newCitations = cleanCitations(docs[index + count].opinions_cited);
+    //             for(var i = 0; i < newCitations.length; i++) {
+    //               data += newCitations[i];
+    //               if(i < newCitations.length - 1)
+    //                   data += ",";
+    //             }
+    //             console.log(data);
+    //             if(data != "") {
+    //               console.log(count);
+    //               var buff = getDocuments(data, count);
+    //               buff.promise.done(function(response) {
+    //                   finished++;
+    //                   console.log(finished + ", " + buff.order);
+    //                   if(finished == count)
+    //                     removeLoadingAnimation();
+    //               });
+    //             }
+    //             else {
+    //                 finished++;
+    //             }
+    //             count++;
+    //         }
+    //     });
+    // }
+    // else if(docs.length == 0) {
+    //     updateResults("No citations for this case");
+    //     return;
+    // }
+    // else {
+    //     updateResults(docs.slice(index, index + maxResults));
+    // }
 }
 
+// !similarityHandler
 function similarityHandler() {
     if($(this).hasClass("selected"))
         return;
@@ -255,7 +333,8 @@ function similarityHandler() {
         absolute_url: $("#header-title").text() + "/",
         content: $("#view-doc").data("content")
     };
-    loadingAnimation("#vis");
+    // loadingAnimation("#vis");
+    $("#body-wrapper").addClass("loading");
     $.ajax({
         url: url,
         type: "GET",
@@ -297,6 +376,7 @@ function similarityHandler() {
     });
 }
 
+// !facetHandler
 function facetHandler() {
     if($(this).hasClass("selected"))
         return;
@@ -315,10 +395,11 @@ function facetHandler() {
 
 }
 
+// !facetSelectHandler
 function facetSelectHandler() {
     var checked = $("#facet-select").find("input:checked");
     var url = "http://52.36.127.109:9000/facetSearch"
-    var caseCite = "caseCite=" + $("#facets").data("caseCite");
+    var caseCite = "courtId=" + $("#facets").data("id");
     var facetRequest = "&facetRequest=";
     var data = "";
     if(checked.length == 0)
@@ -329,7 +410,9 @@ function facetSelectHandler() {
             facetRequest += ",";
     }
     data += caseCite + facetRequest;
-    loadingAnimation("#vis");
+    // loadingAnimation("#vis");
+    $("#body-wrapper").addClass("loading");
+    console.log(data);
     $.ajax({
         url: url,
         type: "GET",
@@ -432,7 +515,7 @@ function backHandler() {
     // $("#search").submit(searchHandler);
 }
 
-function nodeHandler() {
+function nodeHandler(event) {
     $(this).addClass("hovered");
     var caseInfo = $(this).find("circle").data("docInfo");
     var graph = $(this).data("graph");
@@ -445,9 +528,12 @@ function nodeHandler() {
     var topOffset = parseFloat(viewbox[1]);
     var viewWidth = parseFloat(viewbox[2]);
     var viewHeight = parseFloat(viewbox[3]);
-
-    console.log(svg.width()/viewWidth);
-    console.log(viewHeight/svg.height())
+    var clientRect = $(this)[0].getBoundingClientRect();
+    // console.log(svg.width()/viewWidth);
+    // console.log(viewHeight/svg.height())
+    console.log(event.pageX);
+    console.log(event.pageY);
+    console.log(clientRect);
 
     link.data("content", caseInfo.content);
     link.data("id", caseInfo.id);
@@ -464,20 +550,20 @@ function nodeHandler() {
     attrs.append($("<li>").html("Petitioner: " + (caseInfo.petitioner == "null" ? "N/A" : caseInfo.petitioner)));
     var width = menu.width();
     var height = menu.height();
-    var x = (graph.x - leftOffset) * (viewWidth/svg.width());
-    var y = (graph.y - topOffset) * (svg.height()/viewHeight);
-    // if(x < viewWidth/2)
-    //   x += width/2;
+    var x = clientRect.left;
+    var y = clientRect.top + $(document).scrollTop();
+    // if(x - $("#vis").left() < $("#vis").width()/2)
+    //   x += 0;
     // else
-    //   x -= width/2;
-    if(y < svg.height()/2)
-      y += 0;
-    else
-      y -= height;
+    //   x -= width;
+    // if(y < svg.height()/2)
+    //   y += 0;
+    // else
+    //   y -= height;
     $("#menu").css({
         display: "block",
-        top: y, //- (height + (graph.radius/2)),
-        left: x //+ width/2
+        left: x, //+ width/2
+        top: y //- (height + (graph.radius/2)),
     });
     console.log((graph.x) + ", " + (graph.x - leftOffset) * (svg.width()/viewWidth));
 }
@@ -495,6 +581,7 @@ function optionHandler() {
     saveState();
     showHeader($(this).parent().parent());
     $("#results-wrapper").width("45%");
+    $(document).scrollTop(0);
     switch($(this).attr("class")) {
         case "citations":
             if($("#citations").hasClass("selected"))
@@ -531,8 +618,9 @@ function searchHandler() {
                 return;
             }
             var docs = json.documents;
-            var citations = [];
-            var data = [];
+            docs.sort(compareDocs);
+            // var citations = [];
+            // var data = [];
             $("#results").html("");
             if($("#nav-container").find($("#form-container")).length == 0) {
                 $("#img-container").css("display", "none");
@@ -548,10 +636,12 @@ function searchHandler() {
                 $("#form-container").find("a").css({
                     lineHeight: $("#nav-container").css("height")
                 });
-                $("#results-wrapper").css("top", $("#nav-container").css("height"));
-                $("#vis").css("top", $("#nav-container").css("height"));
+                $("#body-wrapper").css("top", $("#nav-container").css("height"));
+                // $("#results-wrapper").css("top", $("#nav-container").css("height"));
+                // $("#vis").css("top", $("#nav-container").css("height"));
                 $(".back").css("display", "inline-block");
             }
+
             for(var i = 0; i < docs.length; i++) {
                 var ids = cleanCitations(docs[i].opinions_cited);
                 var content = docs[i].html;
@@ -563,6 +653,7 @@ function searchHandler() {
             attachHandlers();
             $("#case-header").css("display", "none");
             $("#vis").find("svg").remove();
+            $("#pagination").css("display", "none");
         });
 }
 
@@ -670,7 +761,7 @@ function buildResult(doc, index) {
     similarity.html("Similar content");
 
     // Facet link
-    facet.data("caseCite", caseCite);
+    facet.data("id", id);
     facet.attr("class", "facets");
     facet.html("Similar attributes");
 
@@ -690,12 +781,12 @@ function buildResult(doc, index) {
     snippet.attr("class", "snippet");
 
     // attrs
-    attrs.append($("<li>").html("Date: " + (doc.date == "null" ? "N/A" : doc.date)));
-    attrs.append($("<li>").html("Respondent: " + (doc.respondent == "null" ? "N/A" : doc.respondent)));
-    attrs.append($("<li>").html("Issue: " + (doc.issue == "null" ? "N/A" : doc.issue)));
-    attrs.append($("<li>").html("Chief Justice: " + (doc.chiefJustice == "null" ? "N/A" : doc.chiefJustice)));
-    attrs.append($("<li>").html("Issue Area: " + (doc.issueArea == "null" ? "N/A" : doc.issueArea)));
-    attrs.append($("<li>").html("Petitioner: " + (doc.petitioner == "null" ? "N/A" : doc.petitioner)));
+    attrs.append($("<li>").html("<span>Date:</span> " + (doc.date == "null" ? "N/A" : doc.date)));
+    attrs.append($("<li>").html("<span>Respondent:</span> " + (doc.respondent == "null" ? "N/A" : doc.respondent)));
+    attrs.append($("<li>").html("<span>Issue:</span> " + (doc.issue == "null" ? "N/A" : doc.issue)));
+    attrs.append($("<li>").html("<span>Chief Justice:</span> " + (doc.chiefJustice == "null" ? "N/A" : doc.chiefJustice)));
+    attrs.append($("<li>").html("<span>Issue Area:</span> " + (doc.issueArea == "null" ? "N/A" : doc.issueArea)));
+    attrs.append($("<li>").html("<span>Petitioner:</span> " + (doc.petitioner == "null" ? "N/A" : doc.petitioner)));
     attrs.attr("class", "info");
 
     // Append everything to result
@@ -769,7 +860,7 @@ function placeVis() {
 function adjustVis() {
     var top = $("#vis").data("top") - ($(document).scrollTop());
     //console.log($(document).scrollTop());
-    console.log(top);
+    // console.log(top);
     if(top > 0) {
         $("#vis").css("top", top);
         $("#vis").css("height", $("#vis").data("height") + $(document).scrollTop());
@@ -786,6 +877,16 @@ function nodeLeave() {
         if(!$("#menu").data("hovered"))
           $("#menu").css("display", "none");
       }, 1);
+}
+
+function compareDocs(a, b) {
+    var rankA = parseFloat(a.pagerank);
+    var rankB = parseFloat(b.pagerank);
+    if(rankA > rankB)
+        return -1;
+    if(rankA < rankB)
+        return 1;
+    return 0;
 }
 
 $(document).ready(function(){
