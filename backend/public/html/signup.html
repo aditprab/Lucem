@@ -2,42 +2,75 @@
 <head>
   <link href='https://fonts.googleapis.com/css?family=Raleway:500,700' rel='stylesheet' type='text/css'>
   <link href='/assets/stylesheets/form.css' rel='stylesheet' type='text/css'>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
   <script>
-    $(document).ready(function() {
-      $("#signup").submit(function(e){
-        var url = "/signup";
-        e.preventDefault();
-        if($('#confirm').val() != $('#password').val()) {
-          alert("passwords do not match");
-          return;
+    var emptyClick = function(e) {
+      e.preventDefault();
+    }
+
+    var signup = function(e) {
+      e.preventDefault();
+      $('#signup-form').off('submit');
+      $('#signup-form').submit(emptyClick);
+
+      var url = "/signup";
+      var errorMsg = null;
+
+      if($('#email').val().length == 0) {
+        errorMsg = "invalid email address";
+      } else if($('#confirm').val().length == 0 || 
+                $('#password').val().length == 0) {
+        errorMsg = "invalid password";
+      } else if ($('#confirm').val() != $('#password').val()) {
+        errorMsg = "passwords do not match";
+      }
+
+      if(errorMsg != null) {
+        createErrorBox(errorMsg);
+        $('#confirm').val('');
+        $('#password').val('');
+        $('#signup-form').off('submit');
+        $('#signup-form').submit(signup);
+        return;
+      }
+
+      var obj = {"email":$('#email').val(), "password":$('#password').val()};
+
+      $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: url,
+        data: JSON.stringify(obj)
+      }).done(function(res) {
+        if(res.error) {
+          createErrorBox(res.error);
+          $('#email').val('');
+          $('#confirm').val('');
+          $('#password').val('');
+        } else {
+          createSuccessBox('account was successfully created');
+          $("#modal-background").remove();
         }
-
-        var obj = {"email":$('#email').val(), "password":$('#password').val()};
-
-        $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          url: url,
-          data: JSON.stringify(obj)
-        }).done(function(res) {
-          alert(res.error);
-        });
-
+        $('#signup-form').off('submit');
+        $('#signup-form').submit(signup);
       });
+    };
+    
+    $(document).ready(function() {
+      $("#signup-form").submit(signup);
     });
   </script>
 </head>
 <body>
   <div id="form-container">
-    <form id="signup">
+    <form id="signup-form">
       <span class="label uppercase">Email:</span>
       <input id="email" name="email" type="text"></input>
       <span class="label uppercase">Password:</span>
       <input id="password" name="password" type="password"></input>
       <span class="label uppercase">Confirm Password:</span>
       <input id="confirm" name="confirm" type="password"></input>
-      <button class="submit uppercase inverted" type="submit" value="Sign Up">Sign Up</input>
+      <button class="submit uppercase inverted" type="submit" value="Sign Up">Sign Up</button>
     </form>
   </div>
 </body>

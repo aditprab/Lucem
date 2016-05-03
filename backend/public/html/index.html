@@ -7,11 +7,77 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="/assets/javascripts/modal.js"></script>
   <script>
+    var createErrorBox = function(message) {
+      createNotification(message, 'error');
+    };
+
+    var createSuccessBox = function(message) {
+      createNotification(message, 'success');
+    }
+    
+    var createNotification = function(message, type) {
+      // remove any existing notifications
+      $('#notification-box').remove();
+
+      var container = document.createElement('div');
+      var notification = document.createElement('div');
+      notification.className = 'notification ' + type;
+      notification.innerHTML = message;
+      container.appendChild(notification);
+      container.id = 'notification-box';
+      document.getElementById('global-container').appendChild(container);
+
+      $('#notification-box').css('top', '-100px');
+      $('#notification-box').animate({top:0}, 1200);
+
+      $('#notification-box').delay(2500).animate({top:"-200px"}, 1200, function(){
+        $(this).remove();
+      });
+
+      // $(document).click(function(event) {
+      //   if($('#notification-box').length != 0 && 
+      //     !$(event.target).is(".notification")) {
+      //     console.log("clicked outside");
+      //     $('#notification-box').remove();
+      //   }
+      // });
+    };
+
     var validate = function() {
       var url = '/validate';
 
       $.get(url, function(res) {
         if(res.error == null) {
+          window.location = '/sessions';
+        }
+      });
+    };
+
+    var emptyClick = function(e) {
+      e.preventDefault();
+    };
+
+    var login = function(e) {
+      e.preventDefault();
+      $('#login').off('submit');
+      $('#login').submit(emptyClick);
+
+      var url = "/login";
+      var obj = {"email":$('#email').val(), "password":$('#password').val()};
+
+      $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: url,
+        data: JSON.stringify(obj)
+      }).done(function(res) {
+        $('#login').off('submit');
+        $('#login').submit(login);
+
+        if(res.error != null) {
+          createErrorBox(res.error);
+          $('#password').val('');
+        } else {
           window.location = '/sessions';
         }
       });
@@ -24,24 +90,7 @@
         createModal("30%", "50vh");
         $("#modal-container").load("/assets/html/signup.html");
       });
-      $("#login").submit(function(e) {
-        e.preventDefault();
-        var url = "/login";
-        var obj = {"email":$('#email').val(), "password":$('#password').val()};
-
-        $.ajax({
-          type: 'POST',
-          contentType: 'application/json',
-          url: url,
-          data: JSON.stringify(obj)
-        }).done(function(res) {
-          if(res.error != null) {
-            alert(res.error);
-          } else {
-            window.location = '/sessions';
-          }
-        });
-      });
+      $("#login").submit(login);
     });
   </script>
 </head>

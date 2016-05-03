@@ -19,11 +19,8 @@
 }
 
 .highlighted {
-  background-color:rgb(225, 225, 225);
-  cursor:pointer;
-}
-.highlighted:hover {
   background-color:rgb(255,255,88);
+  cursor:pointer;
 }
 .note {
   margin-bottom:0.75em;
@@ -31,7 +28,7 @@
 .note, #hiddenDiv {
   resize:none;
   font-size:12px;
-  font-family:Helvetica;
+  font-family:'Raleway', sans-serif;
   width:100%;
   min-height:15em;
 }
@@ -119,5 +116,7 @@ span.num {
   background-position:center;
 }
 a.footnote {
-   color:#0066FF;
+   font-size:0.75em;
+   vertical-align:top;
+   color:#337ab7;
 }

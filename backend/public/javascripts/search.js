@@ -10,9 +10,11 @@ function loadingAnimation(insertSelector) {
                        .addClass('center-vertical')
         ).attr('id', 'loading')
     );
+    $(insertSelector).css('overflow', 'hidden');
 }
 
 function removeLoadingAnimation() {
+    $('#loading').parent().css('overflow', 'auto');
     $('#loading').remove();
 }
 
@@ -44,11 +46,9 @@ function getId(uri) {
     return buff[buff.length - 2];
 }
 
-function resultHandler() {
+function addDocumentToHistory(id) {
     var url = '/document';
-    var obj = { 'docID':$(this).data("id") };
-
-    //saveState();
+    var obj = { 'docID':id };
 
     // add document to history, even if the user doesn't
     // view it, because its part of the rationale/breadcrumb
@@ -60,9 +60,12 @@ function resultHandler() {
         data: JSON.stringify(obj)
     }).done(function(res) {
         if(res.error != null) {
-            alert("hello " + res.error);
+            alert(res.error);
         }
     });
+}
+function resultHandler() {
+    //saveState();
 
     // $("#citations").removeClass(".selected");
     // var title = $(this).find("h3").text();
@@ -89,6 +92,9 @@ function resultHandler() {
 function viewHandler() {
     var html = $(this).data("content");
     var id = $(this).data("id");
+
+    addDocumentToHistory(id);
+
     // createModal depends on the inclusion of modal.js and modal.css
     // to function properly
     createModal('95%', '95vh');
@@ -485,6 +491,8 @@ function optionHandler() {
             $("#facets").click();
             break;
     }
+    console.log("id: " + $(this).parent().parent().find(".title").data("id"));
+    addDocumentToHistory($(this).data("id"));
 }
 
 function searchHandler() {

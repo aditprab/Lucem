@@ -6,7 +6,6 @@ html, body {
   background-image:url("http://www.garson-law.com/wp-content/uploads/2014/12/Gavel-on-Book.jpg");
   background-size:cover;
   background-position: center center;
-  background-size:auto 100%;
   background-repeat:no-repeat;
 }
 #global-container {
@@ -76,7 +75,8 @@ input[type="password"].home-input {
   background-color:rgba(0, 0, 0, 0.75);
   color:white;
 }
-#signup > input[type="text"], #signup > input[type="password"], #signup > textarea, #signup > .submit{
+#signup-form > input[type="text"], #signup-form > input[type="password"],
+#signup-form > textarea, #signup-form > .submit{
   background-color:rgba(0, 0, 0, 0.01);
   border-color:white;
   color:white;
@@ -101,6 +101,7 @@ input[type="password"].home-input {
   left:0;
   right:0;
   margin:0 auto;
+  z-index:10000;
 }
 .notification {
   text-align:center;
@@ -117,5 +118,8 @@ input[type="password"].home-input {
   color:white;
 }
 .error {
-  background-color:rgba(185,75,75,0.95);
+  background-color:rgba(185, 75, 75, 0.95);
+}
+.success {
+  background-color:rgba(80, 175, 80, 0.95);
 }

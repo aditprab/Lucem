@@ -497,6 +497,20 @@ public class Application extends Controller {
         return ok(res);
     }
 
+    public static Result logout() {
+        Http.Session session = Http.Context.current().session();
+        ObjectNode res = factory.objectNode();
+
+        if(session.get("email") == null) {
+            res.put("error", "user not logged in");
+        } else {
+            session.clear();
+            res.put("status", "ok");
+        }
+
+        return ok(res);
+    }
+    
     private static boolean isValidRequest(JsonNode request,
                                           String [] keys) {
         if(request == null) {
@@ -510,5 +524,5 @@ public class Application extends Controller {
         return true;
     }
 
- 
+
 }

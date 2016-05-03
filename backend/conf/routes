@@ -57,5 +57,7 @@ GET     /savedDocuments             controllers.Application.getSavedDocuments(se
 GET     /saveDocument               controllers.Application.wasDocumentSaved(docID:String)
 POST    /saveDocument				controllers.Application.saveDocumentToSession()
 
+POST    /logout 				    controllers.Application.logout()
+
 GET     /validate                   controllers.Application.validate()
 GET     /testFacet                  controllers.Application.testFacet()

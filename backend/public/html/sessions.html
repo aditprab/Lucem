@@ -8,6 +8,7 @@
       margin:0;
       padding:0;
       font-family:'Raleway', sans-serif;
+      overflow-x:hidden;
     }
     .ltr-spacing {
       letter-spacing:5px;
@@ -23,7 +24,7 @@
       padding-bottom:60px;
       height:15px;
       text-align:center;
-      background-color:rgba(0,0,0,0.8);
+      background-color:rgba(0, 0, 0, 0.8);
       background-image:url("/assets/images/Courtroom.jpg");
       background-size:cover;
       background-position: center center;
@@ -102,15 +103,16 @@
     }
     #loading {
       background-color:white;
-      position:fixed;
+      position:absolute;
       top:135px; /* should be the sum of the padding + height of #header */
       left:0;
-      height:100%;
+      min-height:400px; /* should be at least as big as a session-row and its margins */
+      height:80%;
       width:100%;
+      overflow:hidden;
       z-index:10;
     }
     #loading-inner {
-      top:40% !important;
       height:60px;
       width:60px;
       margin:0 auto;
@@ -119,6 +121,20 @@
       background-position: center center;
       background-size:100% auto;
       background-repeat:no-repeat;
+    }
+    #modal-container #loading {
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      height:100%;
+    }
+    #session-info #loading {
+      top:0;
+      height:100%;
+      min-height:0;
+      background-color:transparent;
     }
     #action-menu {
       background-color:rgba(28, 28, 40, 0.95);
@@ -209,7 +225,8 @@
       text-align:center;
     }
     #documents {
-      width:100%;
+      top:52.5%;
+      width:95%;
       margin:0 auto;
     }
     .document-btn {
@@ -217,7 +234,7 @@
       padding:0;
       background-color:white;
       width:225px;
-      height:75%;
+      height:70%;
       margin:0 25px;
       position:relative;
       -webkit-box-shadow:10px 10px 35px 10px rgba(0,0,0,0.75);
@@ -254,6 +271,41 @@
       margin:15px 20px;
       font-size:4px;
     }
+    .no-scroll {
+      overflow:hidden;
+    }
+    .back-btn:before {
+      content:"<";
+      color:white;
+      font-size:35px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .back-btn {
+      position:absolute;
+      top:5px;
+      left:1.5%;
+    }
+    #nav-container a {
+      text-decoration:none;
+      font-weight:700;
+      color:white;
+    }
+    #nav-container {
+      background-color:rgba(28, 28, 40, 0.8);
+      color:white;
+      padding:8px 20px;
+      text-align:right;
+      position:absolute;
+      top:0;
+      right:20px;
+      -webkit-border-bottom-left-radius:5px;
+      -webkit-border-bottom-right-radius:5px;
+      -moz-border-bottom-left-radius:5px;
+      -moz-border-bottom-right-radius:5px;
+      border-bottom-left-radius:5px;
+      border-bottom-right-radius:5px;
+    }
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="/assets/javascripts/validate.js"></script>
@@ -289,7 +341,20 @@
       }
     };
 
-    var showEmptyMessage = function() {
+    var showBackButton = function(session) {
+      var back = document.createElement('div');
+
+      back.className = 'back-btn';
+
+      $('#session-info').append(back);
+
+      $('.back-btn').click(function() {
+        $('#session-info').contents().remove(':not(.tip)');
+        showSessionIcons(session);
+      });
+    };
+
+    var showEmptyMessage = function(session) {
       var div = document.createElement('div');
 
       div.appendChild(document.createTextNode('No Documents To Show'));
@@ -308,9 +373,11 @@
                            .addClass('center-vertical')
             ).attr('id', 'loading')
         );
+        $(insertSelector).addClass('no-scroll');
     }
 
     function removeLoadingAnimation() {
+        $('#loading').parent().toggleClass('no-scroll', false);
         $('#loading').remove();
     }
 
@@ -354,16 +421,19 @@
       $('#documents').append(btn);   
     }
 
-    var showDocuments = function(json) {
+    var showDocuments = function(json, session) {
       var documents = json.documents;
       var div = document.createElement('div');
 
       div.className = 'center-vertical';
       div.id = "documents";
 
+      removeLoadingAnimation();
       $('#session-info').contents().remove(':not(.tip)');
+      showBackButton(session);
       $('#session-info').append(div);
 
+      // should change to only show as many as can fit onto the screen.
       for(var i = 0; i < documents.length; ++i) {
         var doc = documents[i];
         var title = getTitle(doc.absolute_url);
@@ -376,6 +446,11 @@
       $('#saved').off('click');
       var sessionID = session.data('sessionID');
       var url = '/savedDocuments';
+
+      $('#session-info').contents().remove(':not(.tip)');
+      loadingAnimation('#session-info');
+      $('#session-info').toggleClass('no-scroll', false);
+
       $.get(url, {'sessionID':sessionID}, function(res) {
         var docIDs = res.saved;
 
@@ -385,6 +460,7 @@
 
         if(docIDs.length == 0) {
           showEmptyMessage();
+          showBackButton(session);
           return;
         }
 
@@ -395,7 +471,7 @@
           data: docIDs.toString(),
           contentType: "text/plain"
         }).done(function(data) {
-          showDocuments(JSON.parse(data));
+          showDocuments(JSON.parse(data), session);
         });
       });
     };
@@ -404,6 +480,11 @@
       $('#history').off('click');
       var sessionID = session.data('sessionID');
       var url = '/documentHistory';
+
+      $('#session-info').contents().remove(':not(.tip)');
+      loadingAnimation('#session-info');
+      $('#session-info').toggleClass('no-scroll', false);
+
       $.get(url, {'sessionID':sessionID}, function(res) {
         var docIDs = res.history;
 
@@ -414,6 +495,7 @@
 
         if(docIDs.length == 0) {
           showEmptyMessage();
+          showBackButton(session);
           return;
         }
 
@@ -424,7 +506,7 @@
           data: docIDs.toString(),
           contentType: "text/plain"
         }).done(function(data) {
-          showDocuments(JSON.parse(data));
+          showDocuments(JSON.parse(data), session);
         });
       });
     };
@@ -433,6 +515,11 @@
       $('#annotated').off('click');
       var sessionID = session.data('sessionID');
       var url = '/annotatedDocuments';
+
+      $('#session-info').contents().remove(':not(.tip)');
+      loadingAnimation('#session-info');
+      $('#session-info').toggleClass('no-scroll', false);
+      
       $.get(url, {'sessionID':sessionID}, function(res) {
         var docIDs = res.annotated;
 
@@ -442,6 +529,7 @@
 
         if(docIDs.length == 0) {
           showEmptyMessage();
+          showBackButton(session);
           return;
         }
 
@@ -452,7 +540,7 @@
           data: docIDs.toString(),
           contentType: "text/plain"
         }).done(function(data) {
-          showDocuments(JSON.parse(data));
+          showDocuments(JSON.parse(data), session);
         });
       });
     };
@@ -557,7 +645,7 @@
       resume_img.className = 'action-icon';
       resume_img.src = '/assets/images/Continue_icon.svg';
       resume_label.setAttribute('class', 'action-label uppercase ltr-spacing-sml');
-      resume_label.appendChild(document.createTextNode('Resume Search'));
+      resume_label.appendChild(document.createTextNode('Search'));
       menuItem_resume.appendChild(resume_img);
       menuItem_resume.appendChild(resume_label);
       menuItem_resume.className = 'action-menu-item';
@@ -608,11 +696,8 @@
       $('.tip').css('left', tipPosition);
     };
 
-    var showSessionInfo = function(session) {
-      var sessionRow = session.parents('.session-row');
-      var infoBackground = document.createElement('div');
-      var sessionInfo = document.createElement('div');
-      var tip = document.createElement('div');
+    var showSessionIcons = function(session) {
+      var sessionInfo = document.getElementById('session-info');
 
       var saved = document.createElement('div');
       var savedIcon = document.createElement('img');
@@ -627,8 +712,6 @@
       var editIcon = document.createElement('img');
       var editLabel = document.createElement('span');
 
-      tip.className = 'tip';
-
       savedIcon.src = '/assets/images/save_inv.svg';
       savedIcon.className = 'info-item-icon';
       savedLabel.appendChild(document.createTextNode('View Saved Documents'));
@@ -640,7 +723,7 @@
 
       historyIcon.src = '/assets/images/document.svg';
       historyIcon.className = 'info-item-icon';
-      historyLabel.appendChild(document.createTextNode('View Document History'));
+      historyLabel.appendChild(document.createTextNode('View Breadcrumb'));
       historyLabel.setAttribute('class', 'info-item-label uppercase ltr-spacing-sml');
       history.appendChild(historyIcon);
       history.appendChild(historyLabel);
@@ -665,8 +748,33 @@
       edit.setAttribute('class', 'info-item center-vertical');
       edit.id = 'edit';
 
+      sessionInfo.appendChild(saved);
+      $('#saved').click(function() {
+        showSavedDocuments(session);
+      });
+      sessionInfo.appendChild(history);
+      $('#history').click(function() {
+        showHistory(session);
+      });
+      sessionInfo.appendChild(annotated);
+      $('#annotated').click(function() {
+        showAnnotatedDocuments(session);
+      });
+      sessionInfo.appendChild(edit);
+      $('#edit').click(function() {
+        editSession(session);
+      });
+    };
+
+    var showSessionInfo = function(session) {
+      var sessionRow = session.parents('.session-row');
+      var infoBackground = document.createElement('div');
+      var sessionInfo = document.createElement('div');
+      var tip = document.createElement('div');
+
       infoBackground.id = 'session-info-background';
 
+      tip.className = 'tip';
       sessionInfo.appendChild(tip);
 
       sessionInfo.id = 'session-info';
@@ -676,24 +784,8 @@
       sessionRow.after(sessionInfo);
 
       $('#session-info').slideDown(function(){
-        sessionInfo.appendChild(saved);
-        $('#saved').click(function() {
-          showSavedDocuments(session);
-        });
-        sessionInfo.appendChild(history);
-        $('#history').click(function() {
-          showHistory(session);
-        });
-        sessionInfo.appendChild(annotated);
-        $('#annotated').click(function() {
-          showAnnotatedDocuments(session);
-        });
-        sessionInfo.appendChild(edit);
-        $('#edit').click(function() {
-          editSession(session);
-        });
+        showSessionIcons(session);
       });
-
 
       var sessionIndex = sessionRow.children().index(session);
       setTipPosition(sessionIndex);
@@ -865,11 +957,11 @@
 
           $('.session-row').width(newRowWidth + 5);
           if($('#session-info').length != 0) {
+            var clicked = $('#action-menu').parents('.session').first();
+            var sessionIndex = $('#action-menu').parents('.session-row')
+                                                .children().index(clicked);
             $('#session-info').width('103%');
-              var clicked = $('#action-menu').parents('.session').first();
-              var sessionIndex = $('#action-menu').parents('.session-row')
-                                                  .children().index(clicked);
-              setTipPosition(sessionIndex);
+            setTipPosition(sessionIndex);
           }
           sessionsPerRow = newSessionsPerRow;
           rowWidth = newRowWidth;
@@ -898,30 +990,31 @@
             maxID = parseInt(session.id);
           }
         }
-        $('#loading').remove();
+        removeLoadingAnimation();
       });
     };
 
-    // loadingScreen() generates following html:
-    // <div id="loading">
-    //   <div id="loading-inner" class="center-vertical">
-    //   </div>
-    // </div>
-    //
-    var loadingScreen = function () {
-      $('#sessions-container').prepend(
-        $('<div/>').append(
-          $('<div/>').attr('id', 'loading-inner')
-                     .addClass('center-vertical')
-        ).attr('id', 'loading')
-      );
-    };
+    var logout = function(e) {
+      var url = '/logout';
+
+      e.preventDefault();
+
+      $.post(url, function(response) {
+        if(response.err != null) {
+            alert('error');
+        } else {
+            window.location = '/';
+        }
+      });
+    }
 
     $(document).ready(function(){
       validate();
 
-      loadingScreen();
+      loadingAnimation('#sessions-container');
       loadSessions();
+
+      $('#logout').click(logout);
 
       $("#new").click(function(){
         createModal("30%", "50vh");
@@ -967,9 +1060,12 @@
 </head>
 <body>
   <div id="global-container">
+    <div id="nav-container">
+      <a href="" id="logout" class="uppercase ltr-spacing-sml">Logout</a>
+    </div>
     <div id="header">
       <h1 class="uppercase ltr-spacing center-vertical">Sessions</h1>
-    </div> 
+    </div>
     <div id="sessions-container">
       <div class="session-row">
         <div id="new" class="session-box">
