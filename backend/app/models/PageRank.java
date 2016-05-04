@@ -29,6 +29,7 @@ public class PageRank{
 				return temp[1];	
 			}
                 }
+		
 
 		//If we get here without returning, it's an invalid docId.
 		return null;
@@ -41,11 +42,29 @@ public class PageRank{
 	
 	public static List<String> getPageRanks(List<String> courtIds){
 		List<String> pageRanks = new ArrayList<String>();
-		for(int i=0; i < courtIds.size(); i++){
-			String result = getPageRank(courtIds.get(i));
-			pageRanks.add(result);
-		}
+		BufferedReader br;
+		String path = "/data/solr-5.4.1/pageranks.txt";
+		try{
+			br = new BufferedReader(new FileReader(path));
+			String line;
+			while((line = br.readLine()) != null){
+				String[] temp = line.split(":");
+				String courtIdFromFile = temp[0];
+				String pageRankFromFile = temp[1];
+				for(int i=0; i < courtIds.size(); i++){
+					if(courtIdFromFile.equals(courtIds.get(i))){
+						pageRanks.add(pageRankFromFile);
+					}
+				}
 
+			}
+
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}		
+
+		
 		return pageRanks;
 	}
 }

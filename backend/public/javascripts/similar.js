@@ -1,5 +1,5 @@
 /*var data = "1178943,104997,104710,104491,104108,103981,103561,103301,102604,102189,105149,104010,105074";
-    
+
 $(document).ready(function() {
     var url = "http://52.36.127.109:9000/getDocuments";
     $.ajax({
@@ -17,7 +17,7 @@ $(document).ready(function() {
 });*/
 
 var width = $("#vis").width();
-var height = 1024;
+var height = $("#vis").height();
 var radius = 30;
 var linkDistance = 100;
 
@@ -101,17 +101,17 @@ function buildSimVis(selectedCase, nodes) {
         data.push(node);
         links.push(link);
     }
-    
+
     console.log(data);
     console.log(links);
     console.log(ticks);
-        
+
      var container = d3.select("#vis").append("svg")
         .attr({
-            width: width,
-            height: height
+            width: "100%",
+            height: "100%"
         });
-        
+
     var force  = d3.layout.force()
         .size([width, height])
         .linkDistance(function(d) {
@@ -125,7 +125,7 @@ function buildSimVis(selectedCase, nodes) {
         .data(links).enter().append("line")
         .style("stroke-width", "1px")
         .style("stroke", "grey");*/
-        
+
     var tickMark = container.selectAll(".tick")
         .data(ticks).enter().append("circle")
             .attr({
@@ -137,11 +137,12 @@ function buildSimVis(selectedCase, nodes) {
                 fill: "none",
                 stroke: "black"
             });
-        
+
     var nodeGroup = container.selectAll("g")
         .data(data).enter().append("g")
         .attr("class", function(d) {
-            $(this).click(nodeHandler);
+            $(this).mouseenter(nodeHandler);
+            $(this).mouseleave(nodeLeave);
             return "node";
         });
 
@@ -178,7 +179,12 @@ function buildSimVis(selectedCase, nodes) {
             return "translate(0," + -d.radius + ")"
         })
         .attr("visibility", "hidden");*/
-        
+
+    var minX;
+    var minY;
+    var maxX;
+    var maxY;
+
     force.on("tick", function() {
         // Code snippet from https://bl.ocks.org/mbostock/3231298
         var q = d3.geom.quadtree(data),
@@ -188,12 +194,27 @@ function buildSimVis(selectedCase, nodes) {
         while (++i < n) q.visit(collide(data[i]));
         // End code snippet
         nodeGroup.attr({
-            transform: function(d) {
+            transform: function(d, i) {
                 $(this).data("graph", {
                     x: d.x,
                     y: d.y,
                     radius: d.radius
                 });
+                if(i == 0) {
+                    minX = parseInt(d.x);
+                    minY = parseInt(d.y);
+                    maxX = 0;
+                    maxY = 0;
+                }
+                if(d.x < minX)
+                    minX = parseInt(d.x) - 30;
+                else if(d.x > maxX)
+                    maxX = parseInt(d.x) + 30;
+                if(d.y < minY)
+                    minY = parseInt(d.y) - 30;
+                else if(d.y > maxY)
+                    maxY = parseInt(d.y) + 30;
+                container.attr("viewBox", (minX * 1) + " " + (minY * 1.1) + " " + ((maxX * 1.1) - (minX)) + " " + ((maxY * 1.6) - (minY)));
                 return "translate(" + [d.x, d.y] + ")";
             }
         });
@@ -203,14 +224,14 @@ function buildSimVis(selectedCase, nodes) {
             }
         })
     });
-    
-    node.on("mouseover", function(d) {
-        var group = ".tick-group-" + scale(d.score);
-        $(group).css("stroke", "red");
-    });
-    
-    node.on("mouseout", function(d) {
-        var group = ".tick-group-" + scale(d.score);
-        $(group).css("stroke", "black");
-    });
+
+    // node.on("mouseover", function(d) {
+    //     var group = ".tick-group-" + scale(d.score);
+    //     $(group).css("stroke", "red");
+    // });
+    //
+    // node.on("mouseout", function(d) {
+    //     var group = ".tick-group-" + scale(d.score);
+    //     $(group).css("stroke", "black");
+    // });
 }

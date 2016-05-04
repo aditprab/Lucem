@@ -22,7 +22,7 @@ POST    /signup			    controllers.Application.addUser()
 
 GET	/caseInfo		    controllers.Application.caseInfo(caseCite: String)
 
-GET	/facetSearch		    controllers.Application.facet(caseCite:String, facetRequest: String)
+GET	/facetSearch		    controllers.Application.facet(courtId:String, facetRequest: String)
 
 GET     /results                    controllers.Application.results()
 
@@ -49,13 +49,13 @@ POST    /~session                   controllers.Application.deleteSession()
 GET     /documentHistory            controllers.Application.getDocumentHistory(sessionID:String)
 POST    /document                   controllers.Application.addToDocumentHistory()
 
-GET     /annotatedDocuments			controllers.Application.getAnnotatedDocuments(sessionID:String)
+GET     /annotatedDocuments	    controllers.Application.getAnnotatedDocuments(sessionID:String)
 GET     /highlight                  controllers.Application.getHighlights(docID:String)
 POST    /highlight                  controllers.Application.addHighlight()
 
 GET     /savedDocuments             controllers.Application.getSavedDocuments(sessionID:String)
 GET     /saveDocument               controllers.Application.wasDocumentSaved(docID:String)
-POST    /saveDocument				controllers.Application.saveDocumentToSession()
+POST    /saveDocument		    controllers.Application.saveDocumentToSession()
 
 POST    /logout 				    controllers.Application.logout()
 
