@@ -22,7 +22,7 @@ function testGraph() {
     return title.replace(/-/g, " ");
     /*buff = title.split("-");
     title = "";
-    for(var i = 0; i < buff.length; i++) 
+    for(var i = 0; i < buff.length; i++)
         title += buff[i][0];
     return title;
 }*/
@@ -78,7 +78,7 @@ $(document).ready(function() {
 });
 
 var width = $("#vis").width();
-var height = 2000;
+var height = 1024;
 var radius = 15;
 var linkDistance = 50;
 
@@ -90,7 +90,7 @@ function buildGraph(selectedCase, nodes, count) {
         {
             fixed: false,
             radius: 20,
-            x: 20,
+            x: width/2,
             y: height/2,
             group: 0,
             color: "#cca300",
@@ -172,9 +172,9 @@ function buildGraph(selectedCase, nodes, count) {
     //console.log(data);
     //console.log(links);
     //$("#vis").html("");
-    
+
     var ranks = [];
-       
+
     for(var i = 0; i < data.length; i++) {
         // var field = "docId=";
         // $.ajax({
@@ -191,19 +191,21 @@ function buildGraph(selectedCase, nodes, count) {
         ranks[i] = parseFloat(data[i].pagerank);
         //console.log(ranks[i]);
     }
-    
+
     var log = d3.scale.log();
     var sqrt = d3.scale.sqrt();
     var linear = d3.scale.linear()
         .domain([d3.min(ranks), d3.max(ranks)])
         .range([15, 30]);
-    
+
     var container = d3.select("#vis").append("svg")
         .attr({
-            width: width,
-            height: height
+            width: "100%",
+            height: "100%",
+            // viewBox: "0 " + "0" + " " + $("#vis").width() + " " + window.innerHeight,
+            // preserveAspectRatio: "xMidYMid"
         });
-        
+
     var force  = d3.layout.force()
         .size([width, height])
         .linkDistance(linkDistance)
@@ -222,7 +224,8 @@ function buildGraph(selectedCase, nodes, count) {
     var nodeGroup = container.selectAll("g")
         .data(data).enter().append("g")
         .attr("class", function(d) {
-            $(this).click(nodeHandler);
+            $(this).mouseenter({event: event}, nodeHandler);
+            $(this).mouseleave(nodeLeave);
             return "node";
         });
 
@@ -271,7 +274,7 @@ function buildGraph(selectedCase, nodes, count) {
             fill: "white",
             "text-anchor": "middle"
         });
-    
+
     // nodeGroup
     //     .on("click", function(d, i) {
     //         $("#document").html(d.content);
@@ -285,7 +288,7 @@ function buildGraph(selectedCase, nodes, count) {
     //         //d3.select(this).select("text").attr("visibility", "hidden");
     //         d3.select(this).select("circle").attr("fill", "black");
     //     });
-    
+
     // node.on("click", function(d, i) {
     //     var menu = $("#menu");
     //     var attrs = menu.find("ul");
@@ -308,9 +311,14 @@ function buildGraph(selectedCase, nodes, count) {
     //         top: d.y - (height + d.radius),
     //         left: d.x - width/2
     //     });
-        
+
     // });
-    
+
+    var minX;
+    var minY;
+    var maxX;
+    var maxY;
+
     force.on("tick", function() {
         // Code snippet from https://bl.ocks.org/mbostock/3231298
         var q = d3.geom.quadtree(data),
@@ -319,7 +327,7 @@ function buildGraph(selectedCase, nodes, count) {
 
         while (++i < n) q.visit(collide(data[i], d3.select(label[0][i])));
         // End code snippet
-        
+
         nodeGroup.attr({
             /*cx: function(d) {
                 return d.x;
@@ -327,16 +335,35 @@ function buildGraph(selectedCase, nodes, count) {
             cy: function(d) {
                 return d.y;
             }*/
-            transform: function(d) {
+            transform: function(d, i) {
                 $(this).data("graph", {
                     x: d.x,
                     y: d.y,
                     radius: d.radius
                 });
+                if(i == 0) {
+                    minX = parseInt(d.x);
+                    minY = parseInt(d.y);
+                    maxX = 0;
+                    maxY = 0;
+                }
+                if(d.x < minX)
+                    minX = parseInt(d.x) - 30;
+                else if(d.x > maxX)
+                    maxX = parseInt(d.x) + 30;
+                if(d.y < minY)
+                    minY = parseInt(d.y) - 30;
+                else if(d.y > maxY)
+                    maxY = parseInt(d.y) + 30;
+                container.attr("viewBox", (minX * 1) + " " + (minY * 1.1) + " " + ((maxX * 1) - (minX)) + " " + ((maxY * 1.5) - (minY)));
+                // container.attr({
+                //     width: maxX - minX,
+                //     height: maxY - minY
+                // });
                 return "translate(" + [d.x, d.y] + ")";
             }
         });
-    
+
         links.attr({
             x1: function(d) {
                 return d.source.x;
@@ -350,9 +377,12 @@ function buildGraph(selectedCase, nodes, count) {
             y2: function(d) {
                 return d.target.y;
             }
-        }); 
+        });
     });
-    
-    
+
+    force.on("end", function() {
+       console.log("(" + minX + "," + minY + "), " + "(" + maxX + "," + maxY + ")");
+    });
+
     return data;
 }
