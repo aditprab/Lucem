@@ -78,7 +78,7 @@ $(document).ready(function() {
 });
 
 var width = $("#vis").width();
-var height = 1024;
+var height = $("#vis").height();
 var radius = 15;
 var linkDistance = 50;
 
@@ -86,20 +86,17 @@ function buildGraph(selectedCase, nodes, count) {
     // selected case
     // width = $("#vis").width();
     //console.log(nodes.length);
-    var data = [
-        {
-            fixed: false,
-            radius: 20,
-            x: width/2,
-            y: height/2,
-            group: 0,
-            color: "#cca300",
-            absolute_url: selectedCase.absolute_url,
-            html: selectedCase.content,
-            citations: count,
-            resource_uri: ""
-        }
-    ];
+    var initial = selectedCase;
+    $.extend(initial, {
+        fixed: false,
+        radius: 20,
+        x: width/2,
+        y: height/2,
+        group: 0,
+        color: "#cca300",
+        citations: count
+    });
+    var data = [initial];
     var links = [];
     // add inital links to selected case
     for(var i = 0; i < count; i++) {
@@ -113,26 +110,15 @@ function buildGraph(selectedCase, nodes, count) {
     // add nodes to data, add remaining links
     var pad = count;
     for(var i = 0; i < nodes.length; i++) {
-        var node = {
+        var node = nodes[i];
+        $.extend(node, {
             fixed: false,
             x: 2 * 40 * ((i / count) + 1),
             y: i,
             radius: radius,
-            absolute_url: nodes[i].absolute_url,
-            html: getContent(nodes[i]),
-            opinions_cited: nodes[i].opinions_cited,
-            resource_uri: nodes[i].resource_uri,
-            pagerank: nodes[i].pagerank,
-            caseCite: nodes[i].caseCite,
-            date: nodes[i].date,
-            issue: nodes[i].issue,
-            respondent: nodes[i].respondent,
-            chiefJustice: nodes[i].chiefJustice,
-            issueArea: nodes[i].issueArea,
-            petitioner: nodes[i].petitioner,
             citations: 0,
             offset: 0
-        };
+        });
         /*if(nodes[i].opinions_cited.length == 0) {
             console.log("no citations");
             continue;
@@ -176,20 +162,7 @@ function buildGraph(selectedCase, nodes, count) {
     var ranks = [];
 
     for(var i = 0; i < data.length; i++) {
-        // var field = "docId=";
-        // $.ajax({
-        //     url: "http://52.36.127.109:9000/pagerank",
-        //     async: false,
-        //     type: "GET",
-        //     dataType: "text",
-        //     data: field + getId(data[i].resource_uri),
-        //     contentType: "text/plain",
-        //     success: function(response) {
-        //         ranks.push(parseFloat(response));
-        //     }
-        // });
         ranks[i] = parseFloat(data[i].pagerank);
-        //console.log(ranks[i]);
     }
 
     var log = d3.scale.log();
@@ -236,18 +209,21 @@ function buildGraph(selectedCase, nodes, count) {
                 return isNaN(r) ? radius : r;
             },
             fill: function(d) {
-                if(d.group != null) {
-                    if(d.group == 0)
-                        return "#cca300";
-                    if(d.group == 1)
-                        return "#3366ff";
-                }
+                // if(d.group != null) {
+                //     if(d.group == 0)
+                //         return "#cca300";
+                //     if(d.group == 1)
+                //         return "#3366ff";
+                // }
+                if(d.landmark != "null")
+                    return "rgb(215,0,0)";
                 return "black";
             },
             class: function(d, i) {
                 $(this).data("docInfo", {
                     title: getTitle(d.absolute_url),
                     content: d.html,
+                    currentDoc: d,
                     citations: cleanCitations(d.opinions_cited),
                     id: getId(d.resource_uri),
                     caseCite: d.caseCite,

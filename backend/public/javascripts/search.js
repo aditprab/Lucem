@@ -1,6 +1,7 @@
 var documents = [];
 var states = [];
 var maxResults = 10;
+var currentDoc = null;
 
 function loadingAnimation(insertSelector) {
     console.log(insertSelector);
@@ -187,6 +188,7 @@ function showHeader(result) {
             display: "block"
         });
     }
+    currentDoc = result.find(".title").data("currentDoc");
     $("#header-title").html(result.find(".title").find("h3").text());
     // console.log(result.find(".title").find("h3").text());
     //console.log($(this).data("citations"));
@@ -235,10 +237,11 @@ function citationHandler() {
     $("#menu").css("display", "none");
 
     var data = "";
-    var selectedCase = {
-        absolute_url: $("#header-title").text() + "/",
-        content: $("#view-doc").data("content")
-    };
+    // var selectedCase = {
+    //     absolute_url: $("#header-title").text() + "/",
+    //     content: $("#view-doc").data("content")
+    // };
+    selectedCase = currentDoc;
     //var container = event.data.citations[$(this).data("target")];
     var citations = $(this).data("ids");
     var index = $(this).data("page") * maxResults;
@@ -335,11 +338,11 @@ function similarityHandler() {
     var url = "http://52.36.127.109:9000/similar";
     var field = "courtId=" + $(this).data("id");
     console.log(field);
-    var selectedCase = {
-        absolute_url: $("#header-title").text() + "/",
-        content: $("#view-doc").data("content")
-    };
-    // loadingAnimation("#vis");
+    // var selectedCase = {
+    //     absolute_url: $("#header-title").text() + "/",
+    //     content: $("#view-doc").data("content")
+    // };
+    var selectedCase = currentDoc;
     $("#body-wrapper").addClass("loading");
     $.ajax({
         url: url,
@@ -529,11 +532,11 @@ function nodeHandler(event) {
     var attrs = menu.find("ul");
     var link = menu.find(".title");
     var svg = $("#vis").find("svg");
-    var viewbox = svg[0].getAttribute("viewBox").split(" ");
-    var leftOffset = parseFloat(viewbox[0]);
-    var topOffset = parseFloat(viewbox[1]);
-    var viewWidth = parseFloat(viewbox[2]);
-    var viewHeight = parseFloat(viewbox[3]);
+    // var viewbox = svg[0].getAttribute("viewBox").split(" ");
+    // var leftOffset = parseFloat(viewbox[0]);
+    // var topOffset = parseFloat(viewbox[1]);
+    // var viewWidth = parseFloat(viewbox[2]);
+    // var viewHeight = parseFloat(viewbox[3]);
     var clientRect = $(this)[0].getBoundingClientRect();
     // console.log(svg.width()/viewWidth);
     // console.log(viewHeight/svg.height())
@@ -542,6 +545,7 @@ function nodeHandler(event) {
     console.log(clientRect);
 
     link.data("content", caseInfo.content);
+    link.data("currentDoc", caseInfo.currentDoc);
     link.data("id", caseInfo.id);
     menu.find(".citations").data("ids", caseInfo.citations);
     menu.find(".similarity").data("id", caseInfo.id);
@@ -558,20 +562,23 @@ function nodeHandler(event) {
     var height = menu.height();
     var x = clientRect.left;
     var y = clientRect.top + $(document).scrollTop();
-    // if(x - $("#vis").left() < $("#vis").width()/2)
-    //   x += 0;
-    // else
-    //   x -= width;
-    // if(y < svg.height()/2)
-    //   y += 0;
-    // else
-    //   y -= height;
+    if(x - parseInt($("#vis").css("left")) < $("#vis").width()/2)
+      x += clientRect.width;
+    else
+      x -= width;
+    if(clientRect.top - parseInt($("#vis").css("top")) < $("#vis").height()/2)
+      y += 0;
+    else
+      y -= (height - clientRect.height);
     $("#menu").css({
         display: "block",
         left: x, //+ width/2
         top: y //- (height + (graph.radius/2)),
     });
-    console.log((graph.x) + ", " + (graph.x - leftOffset) * (svg.width()/viewWidth));
+    $(this).find("circle").attr({
+        "stroke-width": "10",
+        stroke: "yellow"
+    });
 }
 
 function clearPage() {
@@ -750,6 +757,7 @@ function buildResult(doc, index) {
     link.data("citations", ids);
     link.data("id", id);
     link.data("caseCite", caseCite);
+    link.data("currentDoc", doc)
     link.html(title);
     link.attr("class", "title group-" + (index + 1));
 
@@ -881,8 +889,13 @@ function adjustVis() {
 function nodeLeave() {
       console.log("Node leave");
       window.setTimeout(function() {
-        if(!$("#menu").data("hovered"))
+        if(!$("#menu").data("hovered")) {
           $("#menu").css("display", "none");
+          $("circle").attr({
+              "stroke-width": "1",
+              stroke: "black"
+          });
+        }
       }, 1);
 }
 
@@ -925,6 +938,10 @@ $(document).ready(function(){
         console.log("Menu out");
         $("#menu").css("display", "none");
         $("#menu").data("hovered", false);
+        $("circle").attr({
+            "stroke-width": "1",
+            stroke: "black"
+        });
     });
 
     $("#search").submit(searchHandler);
