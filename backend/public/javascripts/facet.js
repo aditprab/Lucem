@@ -112,7 +112,8 @@ function showScatterPlot(data) {
                     respondent: d.respondent,
                     chiefJustice: d.chiefJustice,
                     issueArea: d.issueArea,
-                    petitioner: d.petitioner
+                    petitioner: d.petitioner,
+                    landmark: d.landmark
                 });
                 return "group-" + i;
             }

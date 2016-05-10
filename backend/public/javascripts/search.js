@@ -544,6 +544,7 @@ function nodeHandler(event) {
     console.log(event.pageY);
     console.log(clientRect);
 
+    menu.find("#menu-options").data("id", caseInfo.id);
     link.data("content", caseInfo.content);
     link.data("currentDoc", caseInfo.currentDoc);
     link.data("id", caseInfo.id);
@@ -551,13 +552,14 @@ function nodeHandler(event) {
     menu.find(".similarity").data("id", caseInfo.id);
     menu.find(".facets").data("caseCite", caseInfo.caseCite);
     menu.find("h3").html(caseInfo.title);
+    menu.find(".landmark").html(caseInfo.landmark == "null" ? "" : caseInfo.landmark)
     attrs.html("");
-    attrs.append($("<li>").html("Date: " + (caseInfo.date == "null" ? "N/A" : caseInfo.date)));
-    attrs.append($("<li>").html("Respondent: " + (caseInfo.respondent == "null" ? "N/A" : caseInfo.respondent)));
-    attrs.append($("<li>").html("Issue: " + (caseInfo.issue == "null" ? "N/A" : caseInfo.issue)));
-    attrs.append($("<li>").html("Chief Justice: " + (caseInfo.chiefJustice == "null" ? "N/A" : caseInfo.chiefJustice)));
-    attrs.append($("<li>").html("Issue Area: " + (caseInfo.issueArea == "null" ? "N/A" : caseInfo.issueArea)));
-    attrs.append($("<li>").html("Petitioner: " + (caseInfo.petitioner == "null" ? "N/A" : caseInfo.petitioner)));
+    attrs.append($("<li>").html("<span>Date:</span> " + (caseInfo.date == "null" ? "N/A" : caseInfo.date)));
+    attrs.append($("<li>").html("<span>Respondent:</span> " + (caseInfo.respondent == "null" ? "N/A" : caseInfo.respondent)));
+    attrs.append($("<li>").html("<span>Issue:</span> " + (caseInfo.issue == "null" ? "N/A" : caseInfo.issue)));
+    attrs.append($("<li>").html("<span>Chief Justice:</span> " + (caseInfo.chiefJustice == "null" ? "N/A" : caseInfo.chiefJustice)));
+    attrs.append($("<li>").html("<span>Issue Area:</span> " + (caseInfo.issueArea == "null" ? "N/A" : caseInfo.issueArea)));
+    attrs.append($("<li>").html("<span>Petitioner:</span> " + (caseInfo.petitioner == "null" ? "N/A" : caseInfo.petitioner)));
     var width = menu.width();
     var height = menu.height();
     var x = clientRect.left;
@@ -592,7 +594,8 @@ function clearPage() {
 
 function optionHandler() {
     saveState();
-    addDocumentToHistory($(this).parents('.result').find('.similarity').data("id"));
+    // addDocumentToHistory($(this).parents('.result').find('.similarity').data("id"));
+    addDocumentToHistory($(this).parent().data("id"));
     showHeader($(this).parent().parent());
     $("#results-wrapper").width("45%");
     $(document).scrollTop(0);
@@ -763,6 +766,7 @@ function buildResult(doc, index) {
 
     // data associated with header
     options.data("title", caseTitle);
+    options.data("id", id);
 
     // Citation link
     showCitations.data("ids", ids);

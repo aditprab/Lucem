@@ -284,11 +284,13 @@
     #menu {
         position: absolute;
         display: none;
-        width: 300px;
+        width: 450px;
         /*height: 100px;*/
         border: 2px solid black;
         /*border-radius: 20px;*/
         background-color: white;
+        padding: 10px;
+        text-align: center;
     }
 
     #menu > .glyphicon-remove {
@@ -299,8 +301,27 @@
         cursor: pointer;
     }
 
-    #menu > .title {
+    #menu > #title-wrapper {
         text-align: center;
+        margin: 10px;
+    }
+
+    #menu-options {
+        overflow: auto;
+    }
+
+    #menu-options > a {
+        width: 33.33%;
+        float: left;
+        margin-bottom: 10px;
+    }
+
+    #menu > .landmark {
+        font-style: italic;
+    }
+
+    #menu span {
+        font-weight: bold;
     }
 
     .info {
