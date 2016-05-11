@@ -99,9 +99,10 @@ public class Application extends Controller {
 	//facetRequest is a comma separated list (no spaces)  of fields which correspond to columns in the supremeCourtData.csv.
 	FacetSimilar similar = new FacetSimilar();
 	
-	List<String> courtIds = similar.queryMongoForSimilar(courtId, facetRequest);
+	//List<String> courtIds = similar.queryMongoForSimilar(courtId, facetRequest);
+	List<String> courtIds = similar.getSimilarCases(courtId, facetRequest);
 		if(courtIds == null){
-			return badRequest("the world is ending and the Lord has abandoned us");
+			return badRequest("something went wrong.");
 		}	
 
 	PageRank pageRankUtil = new PageRank();

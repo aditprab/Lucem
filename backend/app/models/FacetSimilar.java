@@ -1,6 +1,7 @@
 package models;
 
 import com.mongodb.client.*;
+import com.mongodb.util.*;
 import static com.mongodb.client.model.Filters.*;
 import org.bson.Document;
 
@@ -19,7 +20,7 @@ public class FacetSimilar{
 
 	public static List<String> queryMongoForSimilar(String courtId, String facets) throws Exception{
 		//Query mongo for other facets with these values.
-		System.out.println("court id is: " + courtId);
+		System.out.println("Court id is: " + courtId);
 		initializeMap();
 		List<String> facetList = facetStringToListOfKeys(facets);
 		//Facet list has the keys to get. Query mongo for the document with given courtId, then pull the values of these keys.
@@ -29,24 +30,47 @@ public class FacetSimilar{
 		
 		int courtIdInt = Integer.parseInt(courtId);
 		Document d = collection.find(eq("courtId", courtIdInt)).first();
-		
-		//Get values in question from Document d, then query again for these values. 
-		List<String> tempValues = new ArrayList<String>();
+		System.out.println("Doc with this court id: " + d);	
+
+		Document queryDoc = new Document();	
+		//Build query based on given keys and their values in this doc.
 		for(int i=0; i < facetList.size(); i++){
-			String temp = d.getString(facetList.get(i));
-			System.out.println(temp);
-			tempValues.add(temp);
+			String key = facetList.get(i);
+			String tempString;
+			int tempInt;
+			try{
+				tempString = d.getString(key);
+				//queryJSON.put(key, tempString);
+				queryDoc.put(key, tempString);
+			}catch(ClassCastException c){
+				tempInt = d.getInteger(key);
+				queryDoc.put(key, tempInt);
+				//queryJSON.put(key, tempInt);
+			}						
 		}
 		
-		return null;		
-
+		List<String> resultList = new ArrayList<String>();	
+		
+		System.out.println("Querying mongo.");
+		FindIterable<Document> result = collection.find(queryDoc);
+	
+		for(Document doc : result){
+			String temp = Integer.toString(doc.getInteger("courtId"));
+			resultList.add(temp);
+		}	
+		
+		System.out.println("Done!");	
+		return resultList;
 	}
+
+
 
 	private static void initializeMap(){
 		columnToKey.put(10, "term");
 		columnToKey.put(12, "chief");
           	columnToKey.put(17, "petitioner");
-                columnToKey.put(41, "issueArea");
+                columnToKey.put(19, "respondent");
+		columnToKey.put(41, "issueArea");
                 columnToKey.put(42, "decisionDirection");
                 columnToKey.put(46, "lawType");
 	}
@@ -72,26 +96,25 @@ public class FacetSimilar{
 	//If moving back to CSV method for some reason, let's keep these methods here. 
 	//Application.java will call queryMongoForSimilar anyways.
 
-	/*
-        public static List<String> getSimilarCases(String caseCite, String facets) throws Exception{
-		System.out.println(caseCite);
+	
+        public static List<String> getSimilarCases(String courtId, String facets) throws Exception{
+		System.out.println(courtId);
 		List<Integer> facetList = getFacetsFromString(facets);	
-		List<String> result = readFileAndGetCourtIds(facetList, caseCite);
+		List<String> result = readFileAndGetCourtIds(facetList, courtId);
 		return result;
 	}
 
-	private static List<String>readFileAndGetCourtIds(List<Integer> facetList, String caseCite) throws Exception{
+	private static List<String>readFileAndGetCourtIds(List<Integer> facetList, String courtId) throws Exception{
 	       //Find the data for the case in request. 
 		String filepath = "/data/solr-5.4.1/facetData/supremeCourtData.csv";
                 BufferedReader br = new BufferedReader(new FileReader(filepath));
                 String line;
                 while((line = br.readLine()) != null){
                         String [] data = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-                        if(data[6].equals(caseCite)){
+                        if(data[53].equals(courtId)){
 				List<String> valuesForCase = getDataFromLine(line, facetList);
 				System.out.println("Values for case: " + valuesForCase.toString());
 				//Now we look for other lines which match the values for this case for the given facetList.
-				String courtId = data[53]; 
 				List<String> result = lookForOtherCases(valuesForCase, courtId, facetList);
 				return result;
 			}
@@ -170,5 +193,4 @@ public class FacetSimilar{
 		
 		return list;
 	}
-	*/
 }
